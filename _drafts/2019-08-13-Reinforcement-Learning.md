@@ -6,9 +6,13 @@ categories: RL Python
 comments: true
 ---
 
-Reinforcement Learning is currently at the forefront of artificial intelligence. Many believe that true artificial intelligence will come from either RL or something we have yet to discover. I hope that through this series I can give you an introduction into the world of RL.
+"There's no way Artificial Intelligence will end the world"
 
-As for difficulty, this is be forcused towards people who have never touched RL before, I will be going over some mathematical equations and python code but those can be ignored if you aren't interested in the technical details. 
+- Man snapped by Robot Thanos
+
+Reinforcement Learning is one of the many forefronts of artificial intelligence. Some believe that RL is the most likely canidate for creating a true artificial intelligence. Through this series, I hope to provide you an introduction into the world of RL.
+
+As for difficulty, this is be forcused towards people who have never touched RL before, I will be going over mathematical equations and python code but those can be ignored if you aren't interested in the technical details. 
 
 Hold on, I'm an undergraduate student, where did I learn everything? Well, most of it stems from the textbook [Reinforcement Learning by Richard Sutton and Andrew Barto][rlbook], it's an great read and this entire blog post series is based on it.
 
