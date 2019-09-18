@@ -1,2 +1,2 @@
-# 2armedbandits.github.io
-Technical Blog
+# Hi I like big birds
+Me too thanks
