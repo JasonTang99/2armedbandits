@@ -6,15 +6,15 @@ categories: RL Python
 comments: true
 ---
 
-"There's no way Artificial Intelligence will end the world"
+> “By far, the greatest danger of Artificial Intelligence is that people conclude too early that they understand it.” 
+>
+>--Eliezer Yudkowsky
 
-- Man snapped by Robot Thanos
+Reinforcement Learning is one of the prominent forefronts of artificial intelligence, though it is much further from the spotlight as compared to the Neural Networks and Support Vector Machines that are finding many business and practical application. Through this series, I hope to alleviate this lack of knowledge and provide you with an introduction into the world of RL.
 
-Reinforcement Learning is one of the many forefronts of artificial intelligence. Some believe that RL is the most likely canidate for creating a true artificial intelligence. Through this series, I hope to provide you an introduction into the world of RL.
+Hold on, I'm an undergraduate student, where did I learn everything? Well, most of it stems from the textbook [Reinforcement Learning by Richard Sutton and Andrew Barto][rlbook], it's an great read and this series is based on it.
 
-As for difficulty, this is be forcused towards people who have never touched RL before, I will be going over mathematical equations and python code but those can be ignored if you aren't interested in the technical details. 
-
-Hold on, I'm an undergraduate student, where did I learn everything? Well, most of it stems from the textbook [Reinforcement Learning by Richard Sutton and Andrew Barto][rlbook], it's an great read and this entire blog post series is based on it.
+As for difficulty, this is be focused towards people who have never touched RL or even machine learning before, I will be going over mathematical equations and python code but those can be ignored if you aren't interested in the technical details.
 
 Now let's jump right into the basics.
 
@@ -22,13 +22,11 @@ Now let's jump right into the basics.
 
 So why use Reinforcement Learning when there are all sorts of Neural Networks, decision trees, and SVMs exist? 
 
-1. RL does not assume observed samples are independent and identically distribution, they are usually very correlated, e.g. an action chosen in a video game might have an impact or change several time steps later.
- 
-2. RL has no need for the labeled data, which is often costly to acquire. An agent is placed in an environment and it tries to exploit the most rewards by learning from its mistakes.
+1. Data: RL does not assume data is sampled from an independent and identically distribution (i.i.d.) like in other forms of machine learning, they are usually very correlated, e.g. an action chosen in a video game might have an impact several time steps later. Additionally, RL has no need for costly labeled data.
 
-3. RL has the potential to attain superhuman capabilities. Supervised machine learning techniques uses data collected from humans and tries to emulate their behaviour, Reinforcement learning performs the tasks itself and can, in some cases, outperform the top humans (AlphaGo, OpenAI Dota 2).
+2. Adaptiveness: RL is able to adapt quickly to new unseen situations and performs well in highly complex states without requiring prior knowledge to provide useful knowledge.
 
-4. RL works well in dynamic complex problems. It is able to adapt quickly to new unseen situations and performs well in highly complex states without requiring prior knowledge to provide useful knowledge.
+3. Intelligence: RL has the potential to attain superhuman capabilities. Supervised machine learning generally uses data collected from humans and emulates that behaviour. Whereas reinforcement learning performs the tasks itself and can, in some cases, outperform the top humans. Because of this, some see RL as the most likely path to achieving Artificial General Intelligence (a machine as capable as a human in every aspect). 
 
 
 ## $k$-armed Bandits
