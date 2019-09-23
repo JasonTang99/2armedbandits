@@ -10,7 +10,7 @@ comments: true
 >
 >--Eliezer Yudkowsky
 
-Reinforcement Learning is one of the prominent forefronts of artificial intelligence, though it is much further from the spotlight as compared to the Neural Networks and Support Vector Machines that are finding many business and practical application. Through this series, I hope to alleviate this lack of knowledge and provide you with an introduction into the world of RL.
+Reinforcement Learning is one of the prominent forefronts of artificial intelligence, though it is much further from the spotlight as compared to the Neural Networks and Support Vector Machines that are finding many business and practical applications. Through this series, I hope to alleviate this lack of knowledge and provide you with an introduction into the world of RL.
 
 Hold on, I'm an undergraduate student, where did I learn everything? Well, most of it stems from the textbook [Reinforcement Learning by Richard Sutton and Andrew Barto][rlbook], it's an great read and this series is based on it.
 
@@ -28,10 +28,9 @@ So why use Reinforcement Learning when there are all sorts of Neural Networks, d
 
 3. Intelligence: RL has the potential to attain superhuman capabilities. Supervised machine learning generally uses data collected from humans and emulates that behaviour. Whereas reinforcement learning performs the tasks itself and can, in some cases, outperform the top humans. Because of this, some see RL as the most likely path to achieving Artificial General Intelligence (a machine as capable as a human in every aspect). 
 
-
 ## $k$-armed Bandits
 
-No this is not about mutant highwaymen, this about slot machines and choices. Consider a slot machine (often refered to as a 1-armed Bandit), but in this case, it has $k$ levers to pull, each leading to a play on the machine with different, independent odds of winning. In order to maximize one's winnings over repeated plays, one would seek out the highest performing levers and keep pulling them. 
+No this is not about mutant highway robbers, this about slot machines and choices. Consider a slot machine (often referred to as a 1-armed Bandit), but in this case, it has $k$ levers to pull, each leading to a play on the machine with different, independent odds of winning. In order to maximize one's winnings over repeated plays, one would seek out the highest performing levers and keep pulling them. 
 
 {% include image.html url="/assets/photos/bandits.PNG" description="The above figure details a 10-armed version of the $k$-armed bandit problem. Each lever has an associated reward sampling distribution, where some levers are more likely to have higher rewards." %}
 
@@ -43,17 +42,17 @@ q = np.random.normal(0.0, 2.0, size=10)
 std = 0.5
 ```
 
-Out of our $k$ choices of levers to pull, each one has an expected value of what reward we will get. Let's denote the action at time $t$ as $A_t$, and the reward from it as $R_{t+1}$ (the time is different since technically the reward occurs in the next time step but you'll see it expressed both ways). We define the quality of action $a$ as the expected reward from taking action $a$:
+Let's denote the choice we make out of the $k$ levers as the action at time $t$ as $A_t$, and the immediate reward as $R_{t+1}$ (the time is different since technically the reward occurs in the next time step but you'll see it expressed both ways in literature). We define the quality of taking $a$ as the expected reward from taking $a$:
 
 $$q_*(a) = \mathbb{E}[R_{t+1}|A_t=a]$$
 
-Where the $*$ represents the optimal (true) of action value function, generally we don't have this so we denote it as $q(a)$. 
+Where the $*$ represents the optimal (true) of action value function, generally we don't have access to this so we have an estimate denoted as $q(a)$. 
 
-At any time step, there must be an estimated value that is the largest. Always choosing that one is known as *exploiting*, and to choose any non maximally estimated choices is *exploring*. Generally, the tradeoff between the 2 choices is short term gain in exploitation, or long term gain in exploration. 
+At any time step, there must be an action with the highest estimated value. Always choosing this action is known as *exploiting*, and to choose any non maximal choices is *exploring*. The trade-off between these 2 options is short term gain in exploitation, or long term gain in exploration. 
 
 ## Action Value Estimation
 
-So how do we update the action value function $q(a)$ so that it better approximates $q_*(a)$? One common idea is to keep a running average of the returns that occured from taking that action. The naive way to code this would be to keep an array of all past rewards and calculate the average every time step, which takes $\mathcal(O)(n)$ time and space per time step. A way to do this in constant time and space is to keep track of a count variable and update using:
+So how do we update the action value function $q(a)$ so that it better approximates $q_*(a)$? One idea is to keep an average of the returns that occurred from taking that action. The naive way to code this would be to keep an array of all past rewards and calculate the average every time step, which takes $\mathcal{O}(n)$ time and space per time step. A way to do this in $\mathcal{O}(1)$ time and space is to keep track of a count variable and update using:
 
 $$
 \begin{align}
@@ -65,7 +64,7 @@ Q_{n+1} &= \frac{1}{n} \sum^{n+1}_{i=1}R_i \\
 \end{align}
 $$
 
-Here's a simple program that performs this update:
+Here's the accompanying code:
 
 ```python
 q_a = np.array([0.0] * len(q))
@@ -80,7 +79,9 @@ for _ in range(n):
 
 ## $\epsilon$-greedy Methods
 
-Given this, how do we decide on which action to take (above we just selected randomly)? If we use the greedy one, it might spend all its time exploiting a good action but not the *optimal* action. We can combat this by using $\epsilon-greedy$ methods, where we have a $1-\epsilon$ chance of taking the greedy action, and an $\epsilon$ chance to take any action at random (includes the greedy action). However, if we have a constant $\epsilon$, then even after an infinite number of iterations and convergence to the optimal value function, we will not take the optimal (greedy) action with more than $(1-\epsilon) + (1/n)\epsilon$ chance, where $n$ is the total number of actions possible.
+Given our action value function, how do we decide on which action to take? If we only choose the greedy (highest estimated value) action, the agent might spend all its time exploiting a good action without ever even exploring the *optimal* action.
+
+We can combat this by using $\epsilon-greedy$ methods, where we have a $1-\epsilon$ chance of taking the greedy action, and an $\epsilon$ chance to take an action at random (includes the greedy action). However, if we have a constant $\epsilon$, then even after an infinite number of iterations and convergence to the optimal value function, we will not take the optimal (which is now the greedy option) action with more than $(1-\epsilon) + (1/n)\epsilon$ chance, where $n$ is the total number of actions possible.
 
 ```python
 q_a = np.array([0.0] * len(q))
@@ -102,7 +103,7 @@ greedy_epsilon(epsilon = 0.1)
 
 ## Optimistic Initialization
 
-One way to improve this algorithm with a bit of knowledge about the rewards is to initialize the values of $q$ optimistically, which means to over estimate all of the expected rewards so that each reward is used once early on in the algorithm (since every initial value is eventually the greedy choice since they are higher than those of any true ones). In our example, we would just change the first line to:
+One way to improve this algorithm with a bit of knowledge about the rewards is to initialize the values of $q$ optimistically, as in, we over estimate all of the expected rewards so that each reward is explored at least once early on in the algorithm (since every initial value is eventually the greedy choice since they are higher than those of any true ones). In our example, we would just change the first line to:
 
 ```python
 q_a = np.array([5.0] * len(q))
@@ -110,7 +111,7 @@ q_a = np.array([5.0] * len(q))
 
 ## Moving Rewards
 
-Consider the situation where the rewards of the levers slowly change over the course of time steps. In this case, it would make sense to weigh recent rewards more compared to past rewards. So we weigh our update using a step-size $\alpha \in (0, 1]$ instead:
+Consider a situation where the rewards of the levers slowly change over the course of time. In this case, it would make sense to weigh recent rewards more compared to past rewards. We can weigh our update using a step-size $\alpha \in (0, 1]$ instead:
 
 $$Q_{n+1} = Q_n + \alpha [R_n - Q_n]$$
 
@@ -125,17 +126,15 @@ def alpha(action):
 
 ## Upper-Confidence Bound Action Selection
 
-In $\epsilon$-greedy methods, we do exploration with no discernment of which non-greedy action should be tried. In Upper-Confidence Bound (UCB) action selection we take into account how close their estimates are to being maximal and how uncertain the estimate is using:
+In $\epsilon$-greedy methods, we do exploration randomly, with no discernment of which non-greedy action should be tried. In Upper-Confidence Bound (UCB) action selection we take into account how close their estimates are to being maximal and how uncertain the estimate is using:
 
 $$\underset{a}{\mathrm{argmax}} \bigg[q(a) + c \sqrt{\frac{ln(t)}{n_a(a)}}\bigg]$$
 
-Where the $q(a)$ term measures the how maximal the estimate is, the $\sqrt{\frac{ln(t)}{n_a(a)}}$ term measures how uncertain the estimate is, and the $c$ controls the degree of exploration. Here's a simple implementation of it:
+Where $a$ is the action, $t$ is the current time step, $n_a(a)$ is how many times $a$ was selected, and $c$ is an adjustable parameter that controls the degree of exploration. So the $q(a)$ term measures the how maximal the estimate is, the $c\sqrt{\frac{ln(t)}{n_a(a)}}$ term measures how uncertain the estimate is. Here's an implementation of it:
 
 ```python
 def ucb(c):
-  t = 0
-  for _ in range(n):
-    t += 1
+  for t in range(1000):
     action = np.argmax([q_a[i] + c * np.sqrt(np.log(t)/np.max([n_a[i], 1])) for i in range(len(q_a))])
     reward = np.random.normal(q[action], std)
     n_a[action] += 1
@@ -146,7 +145,7 @@ ucb(c = 2)
 
 ## Gradient Bandits
 
-Until now, we have been estimating the action value function $q(a)$ and then apply some method to choose an action to perform ($\epsilon$-greedy, UCB). We can also apply a function of numerical preference $H_t(a)$ to each action. Which we then put through as softmax function in order to obtain $\pi(a)$, a function for the probability of taking action $a$. This algorithm is based on the idea of Stochastic Gradient Descent (SGD). The preference function is updated with: 
+So far, we've been estimating the action value function $q(a)$ and then apply some method to choose an action ($\epsilon$-greedy, UCB). We can also apply a function of numerical preference $H_t(a)$ to each action. Which we then put through as soft-max function in order to obtain $\pi(a)$, a function for the probability of taking action $a$. This algorithm is based on the idea of Stochastic Gradient Descent (SGD). The preference function is updated with: 
 
 $$
 \begin{align}
@@ -155,7 +154,7 @@ H_{t+1}(a) &= H_t(a) + \alpha (R_t - \bar{R}_t)\pi_t(a) \\
 \end{align}
 $$
 
-Where $\bar{R}_t$ is the average of all past rewards, $A_t$ is the action selected at time $t$, and all other actions update according to the second equation. Here's an implementation:
+Where $\bar{R}_t$ is the average of all past rewards, $A_t$ is the action selected at time $t$, and all other actions update according to the second equation. The reward average acts as a baseline for how good a reward is, if the difference is very positive that action is more preferred in the future. Here's an implementation:
 
 ```python
 def softmax(x):
@@ -163,8 +162,7 @@ def softmax(x):
 
 def sgd(a):
   reward_avg = 0
-  t = 0
-  for _ in range(n):
+  for t in range(n):
     random_num = np.random.random()
     sm = softmax(q_a)
     action = None
@@ -174,7 +172,6 @@ def sgd(a):
         action = i
         break
     
-    t += 1
     n_a[action] += 1
     reward = np.random.normal(q[action], std)
     reward_avg += 1/t * (reward - reward_avg)
@@ -187,7 +184,7 @@ def sgd(a):
 sgd(0.1)
 ```
 
-### Additional Notes
+## Additional Notes
 
 For a deeper dive on Artificial Intelligence, check out this [WaitButWhy][wbw] blog post.
 
