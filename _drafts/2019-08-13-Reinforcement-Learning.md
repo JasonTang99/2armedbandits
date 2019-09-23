@@ -16,6 +16,8 @@ Hold on, I'm an undergraduate student, where did I learn everything? Well, most 
 
 As for difficulty, this will be focused towards people who have never touched RL or even machine learning before, I will be going over mathematical equations and python code but those can be ignored if you aren't interested in the technical details.
 
+In case you want to take a look at the code, here is a <a target="_blank" href="/assets/files/rl.py">python file</a> and a <a target="_blank" href="/assets/files/rl.ipynb">Jupyter Notebook</a>.
+
 Now let's jump right into the basics.
 
 ## Why Reinforcement Learning?
