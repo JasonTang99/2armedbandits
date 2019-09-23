@@ -31,12 +31,6 @@ blockquote {
     margin: 0;
 }
 
-// blockquote p {
-//     padding: 15px;
-//     background: #eee;
-//     border-radius: 5px;
-// }
-
 img, embed, object, video {
 	max-width: 100%;
 }
@@ -93,7 +87,7 @@ main {
 		@media screen and (min-width: $mobileW + 1) {
 			height: 100vh;
 			position: fixed;
-			padding-bottom: 15vh;
+			padding-bottom: 10vh;
 			margin: 45px 0px;
 		}
 		min-width: $leftWidth;
@@ -119,6 +113,18 @@ main {
 			@media screen and (min-width: $mobileW + 1) {
 				max-width: 120px;
 			}
+		}
+		.bottom {
+			margin-top: auto;
+			display: block;
+			font-size: 18px;
+		}
+		.bottom-div {
+			padding-top: 0.3em;
+			text-align: center;
+		}
+		.bottom-link {
+			text-decoration: none;
 		}
 	}
 }

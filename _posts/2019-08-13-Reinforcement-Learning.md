@@ -70,7 +70,7 @@ Here's the accompanying code:
 q_a = np.array([0.0] * len(q))
 n_a = np.array([0] * len(q))
 
-for _ in range(5000):
+for _ in range(n):
     action = np.random.randint(10)
     reward = np.random.normal(q[action], std)
     n_a[action] += 1
@@ -88,7 +88,7 @@ q_a = np.array([0.0] * len(q))
 n_a = np.array([0] * len(q))
 
 def greedy_epsilon(epsilon):
-  for _ in range(5000):
+  for _ in range(1000):
     action = None
     if np.random.random() < 1 - epsilon:
       action = np.argmax(q_a)
@@ -134,8 +134,8 @@ Where $a$ is the action, $t$ is the current time step, $n_a(a)$ is how many time
 
 ```python
 def ucb(c):
-  for t in range(5000):
-    action = np.argmax([q_a[i] + c * np.sqrt(np.log(t+1)/np.max([n_a[i], 1])) for i in range(len(q_a))])
+  for t in range(1000):
+    action = np.argmax([q_a[i] + c * np.sqrt(np.log(t)/np.max([n_a[i], 1])) for i in range(len(q_a))])
     reward = np.random.normal(q[action], std)
     n_a[action] += 1
     q_a[action] += alpha(action) * (reward - q_a[action])
@@ -174,7 +174,7 @@ def sgd(a):
     
     n_a[action] += 1
     reward = np.random.normal(q[action], std)
-    reward_avg += 1/(t+1) * (reward - reward_avg)
+    reward_avg += 1/t * (reward - reward_avg)
 
     q_a[action] += a * (reward - reward_avg) * (1 - sm[action])
     for i in range(len(sm)):
