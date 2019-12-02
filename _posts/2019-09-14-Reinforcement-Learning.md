@@ -4,6 +4,7 @@ title: 'Basics of Banditry 1: Reinforcement Learning'
 date: 2019-09-14 13:00:00 +0500
 categories: RL Python
 comments: true
+summary: ''
 ---
 
 > “By far, the greatest danger of Artificial Intelligence is that people conclude too early that they understand it.” 
@@ -186,9 +187,9 @@ def sgd(a):
 sgd(0.1)
 ```
 
-## Additional Notes
+<!-- ## Additional Notes -->
 
-For a deeper dive on Artificial Intelligence, check out this [WaitButWhy][wbw] blog post.
+<!-- For a deeper dive on Artificial Intelligence, check out this [WaitButWhy][wbw] blog post. -->
 
 {% if page.comments %}
   {%- include disqus.html -%}

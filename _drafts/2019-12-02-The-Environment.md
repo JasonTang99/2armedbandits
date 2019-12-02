@@ -1,17 +1,22 @@
 ---
 layout: post
-title: 'Basics of Banditry: Environment Dynamics and Value Iteration'
-date: 2019-08-13 13:00:00 +0500
+title: 'Basics of Banditry 2: The Environment'
+date: 2019-12-02 13:00:00 +0500
 categories: RL Python
+comments: true
+summary: ''
 ---
 
-In the previous part we outlined the basics of the value function estimation and how to choose actions from it. Today we will more formally define a general representation of an environment and generate a policy from it.
+In the previous part we outlined the basics of the value function and how to choose actions from it. Today we will more formally define a general representation of an environment and generate a policy from it.
 
 For the previous parts:
 
+Part 1: [Reinforcement Learning]({{ site.baseurl }}{% post_url 2019-08-13-Reinforcement-Learning %}) 
+
+
 ## Markov Decision Processes
 
-A Markov Decision Process (MDP) is a sequence of decision making events where the outcome is determined partly randomly and partly controlled based on action. They also have the Markov property, i.e. that all conditional probabilities of future states depend only upon the current state and not those that came before it. MDP leads to a sequence of States ($S$), Actions ($A$), and Rewards ($R$):
+A Markov Decision Process (MDP) is a sequence of decision making events where the outcome is determined partly randomly and partly controlled based on action. They also have the Markov property: all conditional probabilities of future states depend only on the current state and not past ones. MDP leads to a sequence of States ($S$), Actions ($A$), and Rewards ($R$):
 
 $$
 S_0,A_0,R_1,S_1,A_1,R_2,S_2,A_2,R_3,\ldots
@@ -40,7 +45,7 @@ $$ -->
 
 ## Goals and Rewards
 
-Our goal and associated reward function defines what we want the agent to accomplish, but not how we want it to acheive it. Generally, we define the reward function as the expected return for future rewards with respect to time $t$ as $G_t$. Since the task might never have an end, we discount future rewards with rate $\gamma$ between 0 and 1:
+Our goal and associated reward function defines *what* we want the agent to accomplish, but not *how* we want it to achieve it. Generally, we define the reward function as the expected return for future rewards with respect to time $t$ as $G_t$. Since the task might never end, we discount future rewards with rate $\gamma$ between 0 and 1:
 
 $$
 \begin{align}
@@ -51,15 +56,15 @@ $$
 \end{align}
 $$
 
-Even though this is an infinite sum, as long as the discount is less than 1 and reward stays a constant, the return stays finite as well. 
+Although this is an infinite sum, as long as the discount is less than 1 and reward stays constant, the return stays finite as well. 
 
-In order to combine the episodic and infinite situations, we just add an infinite number of 0's after the terminal step in episodic cases so it too is infinite without any change in reward function values.
+In order to combine the episodic and never-ending scenarios, we assume a constant state of reward 0 after the terminal step in episodic cases so it too is infinite without any effect to the reward function.
 
-The design of this function is significant in the performance for the agent. Say, for example, we were to simulate an agent in a room where it needs to reach the door, where it recieves a reward of +1, and at every time step it suffers a reward of -1. And say the simulation terminates whenever a wall, window or door is reached. In this situation, the agent would quickly learn that throwing itself upon a wall or out a window is the most optimal solution, as it incurs the least negative number of points. 
+The design of this function is paramount to the agent's performance. Suppose we were to simulate an agent in a room where it needs to reach the door, where it receives a reward of +1, and at every time step it suffers a reward of -1. And say the simulation terminates whenever a wall, window or door is reached. In this situation, the agent would quickly learn that throwing itself on a wall or out a window is the most optimal solution, as it incurs the least negative reward. 
 
 ## Value Functions
 
-Given our policy $\pi(a|s)$ (which is means how likely the agent takes action $a$ in state $s$), we can define how rewarding it is for an agent to be in a certain state. We do this with a state-value function $v_\pi(s)$ which defines the value being at state $s$ and following $\pi$ from then on:
+Given our policy $\pi (a|s)$ (which is means how likely the agent takes action $a$ in state $s$), we can define how rewarding it is for an agent to be in a certain state. We do this with a state-value function $v_\pi(s)$ which defines the value being at state $s$ and following $\pi$ from then on:
 
 $$v_\pi(s) = \mathbb{E}_\pi [G_t | S_t = s] = \mathbb{E}_\pi \bigg[\sum_{k=0}^\infty \gamma^k R_{t+k+1}| S_t = s\bigg]$$
 

@@ -4,12 +4,12 @@ title: 'Basics of Banditry 1: Reinforcement Learning'
 date: 2019-09-14 13:00:00 +0500
 categories: RL Python
 comments: true
-summary: ''
+summary: 'The start of our adventures into Reinforcement Learning'
 ---
 
-> “By far, the greatest danger of Artificial Intelligence is that people conclude too early that they understand it.” 
->
->--Eliezer Yudkowsky
+Hello! My name's Jason and this is my friend Mallory.
+
+{% include image.html url="/assets/images/1-hello.png" description="Hi" %}
 
 Reinforcement Learning is one of the prominent forefronts of artificial intelligence, though it is much further from the spotlight as compared to the Neural Networks and Support Vector Machines that are finding many business and practical applications. Through this series, I hope to alleviate this lack of knowledge and provide you with an introduction into the world of RL.
 
@@ -187,9 +187,13 @@ def sgd(a):
 sgd(0.1)
 ```
 
-<!-- ## Additional Notes
+## Additional Notes
 
-For a deeper dive on Artificial Intelligence, check out this [WaitButWhy][wbw] blog post. -->
+For a deeper dive on Artificial Intelligence, check out this [WaitButWhy][wbw] blog post.
+
+{% if page.comments %}
+  {%- include disqus.html -%}
+{% endif %}
 
 [rlbook]: http://incompleteideas.net/book/RLbook2018.pdf
 [wbw]: https://waitbutwhy.com/2015/01/artificial-intelligence-revolution-1.html

@@ -17,6 +17,11 @@ layout: default
 <div class="post">
 	{{ content }}
 </div>
+
+{% if page.comments %}
+  {%- include disqus.html -%}
+{% endif %}
+
 {%- if site.plainwhite.disqus_shortname -%}
 <div id="disqus_thread" style="margin-top:25px"></div>
   <script>
