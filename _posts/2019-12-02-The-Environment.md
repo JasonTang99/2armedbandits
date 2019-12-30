@@ -7,45 +7,34 @@ comments: true
 summary: ''
 ---
 
-In the previous part we outlined the basics of the value function and how to choose actions from it. Today we will more formally define a general representation of an environment and generate a policy from it.
+In the previous part we outlined the basics of the value function and how to choose actions given it. Today, we will formally define a general representation of an environment and generate a policy from it.
 
 For the previous parts:
 
 Part 1: [Reinforcement Learning]({{ site.baseurl }}{% post_url 2019-09-14-Reinforcement-Learning %}) 
 
+Code used:
+
+- <a href="/assets/files/2-environment.py">Python file</a>
+- <a href="/assets/files/2-environment.ipynb">Jupyter Notebook</a>
 
 ## Markov Decision Processes
 
-A Markov Decision Process (MDP) is a sequence of decision making events where the outcome is determined partly randomly and partly controlled based on action. They also have the Markov property: all conditional probabilities of future states depend only on the current state and not past ones. MDP leads to a sequence of States ($S$), Actions ($A$), and Rewards ($R$):
+A Markov Decision Process (MDP) is a sequence of decision making events where the outcome is determined partly randomly and partly based on our action. They satisfy the Markov property: all conditional probabilities of future states depend only on the current state and not past ones. MDP leads to a sequence of States ($S$), Actions ($A$), and Rewards ($R$):
 
 $$
 S_0,A_0,R_1,S_1,A_1,R_2,S_2,A_2,R_3,\ldots
 $$
 
-Given State $s$ and Action $a$, we define probabilities of Next State $s'$ and Reward $r$ with $p(s',r\|s,a)$, where:
+Given State $s$ and Action $a$, we define probabilities of Next State $s'$ and Reward $r$ with $p(s',r\|s,a)$. The representations of these states and actions vary wildly and have a strong impact on the performance of the agent. 
 
-$$
-\forall s\in S, \forall a \in A(s), \sum_{s'\in S} \sum_{r\in R} p(s',r|s,a) = 1
-$$
-
-The split between environment and agent is generally defined as the limit of absolute control, even things like motors and muscles are sometimes considered part of the environment. The representations of the states and actions vary wildly between different situations and have a strong impact on the performance of the algorithm. 
-
-<!-- There are several other forms of representing $p$ that are sometimes useful:
-State Transition Probabilities
-Expected rewards for State-Action Pairs
-Expected Rewards for State - Action - Next-State triples:}
-
-$$
-\begin{align}
-    p(s'|s,a) &= \sum_{r\in R}p(s',r|s,a) \\
-    r(s,a) &= \sum_{r\in R}r \sum_{s'\in S}p(s',r|s,a) \\
-    r(s,a) &= \sum_{r\in R}r \frac{p(s',r|s,a)}{p(s'|s,a)} \\
-\end{align}
-$$ -->
+The randomness comes from stochastic environments, where the split between environment and agent is generally defined as the limit of absolute control. Even things like motors and muscles are sometimes considered part of the environment as they can exhibit random unexpected behaviour. 
 
 ## Goals and Rewards
 
-Our goal and associated reward function defines *what* we want the agent to accomplish, but not *how* we want it to achieve it. Generally, we define the reward function as the expected return for future rewards with respect to time $t$ as $G_t$. Since the task might never end, we discount future rewards with rate $\gamma$ between 0 and 1:
+We need to define and measure our goal in order for the agent to know how well its performing. This involves creating an associated reward function that defines *what* we want the agent to accomplish, but not *how* we want it to achieve it. For example, if we want an agent to move to a certain location, we can use the negated distance from goal as the reward (further is worse so more negative).
+
+Generally, we define the reward function as the expected return for future rewards, denoted $G_t$. Since the task might never end, we discount future rewards with rate $\gamma$ between 0 and 1:
 
 $$
 \begin{align}
@@ -64,9 +53,9 @@ The design of this function is paramount to the agent's performance. Suppose we 
 
 ## Value Functions
 
-Given our policy $\pi (a\|s)$ (probability the agent takes action $a$ in state $s$), we can define how rewarding it is for an agent to be in a certain state. 
+After we decide our policy $\pi (a\|s)$ (probability the agent takes action $a$ in state $s$, can be deterministic or stochastic depending on action selection) with methods from last post, we can define how rewarding it is for an agent to be in a certain state. 
 
-One way to achieve this is a state value function $v_\pi(s)$, which defines the value being at state $s$ and following $\pi$ from then on:
+One way to achieve this is to create a state value function $v_\pi(s)$, which defines the value being at state $s$ and following $\pi$ from then on:
 
 $$v_\pi(s) = \mathbb{E}_\pi [G_t | S_t = s] = \mathbb{E}_\pi \bigg[\sum_{k=0}^\infty \gamma^k R_{t+k+1}| S_t = s\bigg]$$
 
@@ -119,138 +108,175 @@ Although it is possible to solve these equations directly, we require knowledge 
 
 $$
 \begin{align}
-    \pi_*(a|s) =\max_a q_{*}(s,a) \\
-    \pi_*(a|s) = \sum_{s', r} p(s', r | s, a) [r + \gamma v_*(s')] \\
+    \pi_*(a|s) &=\max_a q_{*}(s,a) \\
+    \pi_*(a|s) &= \sum_{s', r} p(s', r | s, a) [r + \gamma v_*(s')] \\
 \end{align}
 $$
 
-In general, we do not know the dynamics of the environment nor do we have the capability to compute the direct solution. Thus, we need to find a way to reach approximate states of these optimal value functions.
+But generally we do not know the dynamics of the environment nor do we have the capability to compute the direct solution. Thus, we need to find a way to reach approximate states of these optimal value functions.
 
-## Policy Evaluation
+## A Gambler's Game
 
-A method to find an approximately optimal value functions is Iterative Policy Evaluation. Which calculates state values using dynamic programming until the recursive formula becomes stable with less than $\Delta$ change between iterations. Let $v_k, v_{k+1}$ represent the current and next approximate value functions we have for the optimal $v_*$.
-
-$$v_{k+1}(s) = \max_a \sum_{s',r} p(s',r|s,a)\big[r+\gamma v_k(s')\big]$$
-
-Iterative Policy Improvement compares the values of taking each action at each state, and if they're better than their respective state values, then the policy is changed accordingly.
-
-### Value Iteration
-
-When we stop policy evaluation after only one sweep, and then iteratively improve the policy, we get a simple update operation called value iteration. The improvement cycle follows:
-
-$$\pi'(s) = {\arg\max}_a q_\pi (s,a)$$
-
-<!-- Consider an example of a Gambler's game: a gambler starts with some amount of money, their goal is to bet on weighted coin flips, winning back double his bet for each head, and losing his bet for tails. He wins when he has 100 dollars and loses upon reaching 0 dollars. Here is the python code for this:
+Before approximating the value functions, let's consider a game: a gambler starts with some amount of money, their goal is to bet on weighted coin flips, winning back double his bet for each head, and losing his bet for tails. He wins when he has 100 dollars and loses upon reaching 0 dollars. Here is the python code for this:
 
 ```python
 import numpy as np
 
-# States represent how much money our gambler has
-NUM_STATES = 101 # 0 - 100
-V_s = np.zeros(NUM_STATES)
-V_s[NUM_STATES - 1] = 1 # Only place where reward is 1
+# States represent how much money our gambler has, with range [0, 100] inclusive
+V_s = np.zeros(101)
+NUM_STATES, NUM_ACTIONS = 101, 50
 
-V_index = np.array(range(1, 100))
+# Reward of +1 at 100 and 0 otherwise
+def reward(state):
+  return int(state == 100)
 
-policy = np.ones(99) # 1 - 99 are not terminal states
+# Gambler can bet at most up to his money, or the amount of money that gets him to 100 if heads
+def get_actions(state):
+  return list(range(0, min(state, 100 - state)))
 
-def get_actions(s):
-  return list(range(1, min(s, 100 - s) + 1))
+def get_states():
+  return list(range(1, 100))
 
-DELTA_LIM = 0.000001
-DISCOUNT = 1
-
+# Probability of Heads
 p_h = 0.4
 
-# At most there are 50 actions to take (at state 50, actions: [1,50])
+# Calculate probability and new state, reward transitions
+# There are 50 actions to take (actions in [1,50] inclusive)
+# Returns list of (next_state, reward, probability)
+def transitions(state, action):
+  return [
+    (state + action + 1, reward(state + action + 1), p_h),
+    (state - action - 1, reward(state - action - 1), 1 - p_h),
+  ]
 
-prob_table = []
+# Set up training parameters
+DELTA_LIM = 0.0000000001
+DISCOUNT = 1
+```
 
-for s in V_index: # [1, 99]
-  heads = []
-  tails = []
-  for a in get_actions(s): # [1, min(s, 100 - s)]
-    heads.append([p_h, 0, s + a])
-    tails.append([1 - p_h, 0, s - a])
+## Policy Evaluation
 
-  for _ in range(50 - len(heads)):
-    heads.append([0,0,0])
-    tails.append([0,0,0])
+Now, to approximate optimal value functions, we can use Iterative Policy Evaluation. Which calculates state values using dynamic programming until the recursive formula becomes stable with less than $\Delta$ change between iterations. Let $v_k, v_{k+1}$ represent the current and next approximate value functions we have for the optimal $v_*$.
 
-  prob_table.append(np.stack([np.array(heads), np.array(tails)], axis = 1))
-  
-prob_table = np.array(prob_table)
-prob_table.shape
+$$v_{k+1}(s) = \max_a \sum_{s',r} p(s',r|s,a)\big[r+\gamma v_k(s')\big]$$
 
-def value_iteration_optimized(V_s):
+Here's the accompanying code:
+
+```python
+def policy_evaluation(V_s, policy):
   delta = DELTA_LIM + 1
-  
-  new_policy = None
   
   while delta > DELTA_LIM:
     delta = 0
+    for state in get_states():
+      old_state = V_s[state]
+      
+      expected_reward = 0
+      for action in get_actions(state):
+        action_reward = 0
+        for next_state, reward, prob in transitions(state, action):
+          action_reward += prob * (reward + DISCOUNT * V_s[next_state])
+        expected_reward += action_reward * policy[state, action]
+
+      V_s[state] = expected_reward
+      delta = max(delta, abs(old_state - V_s[state]))
+    
+  return V_s
+```
+
+## Policy Improvement
+
+Iterative Policy Improvement compares the values of taking each action at each state, and if they're better than their respective state values, then the policy is changed accordingly.
+
+Here's the accompanying code:
+
+```python
+def policy_improvement(V_s, policy):
+  stable = True
+
+  for state in get_states():
+    old_action = np.argmax(policy[state])
+    rewards = np.zeros(NUM_ACTIONS)
+
+    for action in get_actions(state):
+      for next_state, reward, prob in transitions(state, action):
+        rewards[action] += prob * (reward + DISCOUNT * V_s[next_state])
+
+    policy[state] = np.eye(NUM_ACTIONS)[np.argmax(rewards)]  
+    stable &= (old_action == np.argmax(policy[state]))
   
-    v = V_s.copy()
-    
-    reward = prob_table[:, :, :, 1] + DISCOUNT * v[prob_table[:, :, :, 2].astype(np.intp)] # (99, 50, 2)
-    reward *= prob_table[:, :, :, 0] # (99, 50, 2)
-    reward = np.sum(reward, axis=2) # (99, 50)
-    
-    V_s = np.max(reward, axis = 1) # (99)
-    V_s = np.array([0] + V_s.tolist() + [1])
-    
-    new_policy = np.argmax(reward, axis = 1) + 1
-    
-    delta = np.amax(np.abs(v - V_s))
-    
-    print("DELTA", np.round(delta, 6))
-    
-  return new_policy, V_s
+  return policy, stable
+```
 
+{% include image.html 
+  url="/assets/images/policy_eval.png" 
+  description="The approximate value function for a policy that bets 1 everytime." 
+%}
 
+## Policy Iteration
 
-def P(s, a):
-  return [[p_h, s + a], [1-p_h, s - a]]
+To combine Policy Evaluation and Policy Improvement, we use Policy Iteration, which simply runs one cycle of Policy Evaluation then one cycle of Policy Improvement over and over, similar to Expectation Maximization in other contexts.
 
+Here's the accompanying code:
+
+```python
+def policy_iteration():
+  V_s = np.random.random(NUM_STATES)
+  V_s[-1] = 0
+
+  policy = np.zeros((NUM_STATES, NUM_ACTIONS))
+  policy[:, 0] = 1
+
+  stable = False
+  while not stable:
+    V_s = policy_evaluation(V_s, policy)
+    policy, stable = policy_improvement(V_s, policy)
+  return V_s, policy
+```
+
+## Value Iteration
+
+We can see that there is significant overlap in the calculations performed by Policy Evaluation and Policy Improvement. We can improve the efficiency of Policy Iteration when we stop policy evaluation after only one sweep, and then iteratively improve the policy. This is called value iteration which updates using:
+
+$$
+\begin{align}
+    v_{k+1}(s) = \max_a \sum_{s', r} p(s', r | s, a) [r+\gamma v_k(s')] \\
+\end{align}
+$$
+
+<!-- $$\pi'(s) = {\arg\max}_a q_\pi (s,a)$$ -->
+
+```python
 def value_iteration(V_s):
   delta = DELTA_LIM + 1
-  
-  new_policy = np.ones(99)
+  policy = np.zeros((NUM_STATES, NUM_ACTIONS))
+  policy[:, 0] = 1
   
   while delta > DELTA_LIM:
     delta = 0
-    for s in range(1, NUM_STATES - 1):
-      v = V_s[s]
-      rewards = []
-      for a in get_actions(s):
-        reward = 0
-        for prob, next_state in P(s, a):
-          if next_state == 101:
-            reward += prob * (1 + DISCOUNT * V_s[next_state])
-          else:
-            reward += prob * (DISCOUNT * V_s[next_state])
-        rewards.append(reward)
-      V_s[s] = max(rewards)
-      new_policy[s - 1] = np.argmax(rewards) + 1
-      delta = max(delta, abs(v - V_s[s]))
-    print("DELTA", np.round(delta, 6))
+    for state in get_states():
+      v = V_s[state]
+      rewards = np.zeros(NUM_ACTIONS)
+
+      for action in get_actions(state):
+        for next_state, reward, prob in transitions(state, action):
+          rewards[action] += prob * (reward + DISCOUNT * V_s[next_state])
+      
+      V_s[state] = rewards.max()
+      policy[state] = np.eye(NUM_ACTIONS)[np.argmax(rewards)]
+      delta = max(delta, abs(v - V_s[state]))
     
-  return new_policy, V_s
+  return policy, V_s
+```
 
-policy, V_s = value_iteration_optimized(V_s)
-print(policy)
-print(V_s)
+{% include image.html 
+  url="/assets/images/policy_med.png" 
+  description="Policy function learned (Median over 50 iterations to account for stochasticity)" 
+%}
 
-import matplotlib.pyplot as plt
-plt.bar(range(1,100), policy)
-plt.show()
-
-plt.plot(V_s)
-plt.show()
-``` -->
 ### Asynchronous DP
 
-In our Iterative DP algorithm, we update the states one by one. In reality, we have no need to update all at once, we could update one state multiple times before updating another once. However, for the guarantee of convergence, we cannot stop updating states permanently after some point in the computation. We do this to improve the rate of progress as some states need their values updated more often than others.
+In our Iterative DP algorithm, we update the states one by one. In reality, we have no need to update all at once, we could update one state multiple times before updating another once. However, for the guarantee of convergence, we cannot stop updating states permanently after some point in the computation. This improves the rate of learning as some states need their values updated more often than others.
 
 In practice, we can run an iterative DP algorithm at the same time that the agent is experiencing the environment. The experience gives the algorithm states to update, and simultaneously, the latest value and policy guide the agent's decisions.
 
