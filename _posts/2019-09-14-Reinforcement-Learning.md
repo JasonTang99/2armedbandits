@@ -37,7 +37,7 @@ So why use Reinforcement Learning when there are all sorts of Neural Networks, d
 No this is not about mutant highway robbers, this about slot machines and choices. Consider a slot machine (often referred to as a 1-armed Bandit), but in this case, it has $k$ levers to pull, each leading to a play on the machine with different, independent odds of winning. In order to maximize one's winnings over repeated plays, one would seek out the highest performing levers and keep pulling them. 
 
 {% include image.html 
-  url="/assets/images/bandits.PNG" 
+  url="/assets/images/1-rl/bandits.png" 
   description="The above figure details a 10-armed version of the $k$-armed bandit problem. Each lever has an associated reward sampling distribution, where some levers are more likely to have higher rewards." 
 %}
 
@@ -128,9 +128,7 @@ We can also set $\alpha$ to be a function that changes over time (e.g. setting i
 def alpha(action):
   return 1 / n_a[action]
   # return 0.1
-
 ```
-
 
 ## Softmax Action Selection
 

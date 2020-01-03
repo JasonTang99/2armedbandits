@@ -7,7 +7,6 @@ comments: true
 summary: ''
 ---
 
-
 \textbf{TD Learning}
 
 Temporal Difference Learning is a combination of monte carlo ideas and dynamic programming. They learn directly from raw experience without a model of the environment (Monte Carlo), and update estimates based on other estimates (DP). 

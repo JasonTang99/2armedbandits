@@ -209,7 +209,7 @@ def policy_improvement(V_s, policy):
 ```
 
 {% include image.html 
-  url="/assets/images/policy_eval.png" 
+  url="/assets/images/2-env/policy_eval.png" 
   description="The approximate value function for a policy that bets 1 everytime." 
 %}
 
@@ -270,17 +270,17 @@ def value_iteration(V_s):
 ```
 
 {% include image.html 
-  url="/assets/images/policy_med.png" 
+  url="/assets/images/2-env/policy_med.png" 
   description="Policy function learned (Median over 50 iterations to account for stochasticity)" 
 %}
 
-### Asynchronous DP
+## Asynchronous DP
 
 In our Iterative DP algorithm, we update the states one by one. In reality, we have no need to update all at once, we could update one state multiple times before updating another once. However, for the guarantee of convergence, we cannot stop updating states permanently after some point in the computation. This improves the rate of learning as some states need their values updated more often than others.
 
 In practice, we can run an iterative DP algorithm at the same time that the agent is experiencing the environment. The experience gives the algorithm states to update, and simultaneously, the latest value and policy guide the agent's decisions.
 
-### Generalized Policy Iteration
+## Generalized Policy Iteration
 
 Policy iteration is a mix of making the Value Function consistent with the policy (policy evaluation), and the other is making the policy greedy with respect to the Value Function (policy improvement). These processes complete before the other runs. 
 
