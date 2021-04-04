@@ -6,7 +6,7 @@ permalink: /about/
 
 # About This Site
 
-This is my technical blog site for Computer Science related topics. Here, I will express my views and thoughts on topics I am interested in. Feel free to use anything of mine, there's no need to ask for permission.
+This is my technical blog site for Computer Science related topics. Here, I will express my views and thoughts on topics I am interested in.
 
 I used the [Jekyll][jekyll] and a modified version of the [plainwhite-jekyll][plain_gh] theme.
 

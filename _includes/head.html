@@ -2,9 +2,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <link href="https://fonts.googleapis.com/css?family=Merriweather:300|Raleway:400,700" rel="stylesheet">
-<link rel="stylesheet" href="{{ "/assets/css/style.css" | relative_url }}">
+<link rel="stylesheet" href='{{ "/assets/css/style.css" | relative_url }}'>
 <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
-<!-- Global site tag (gtag.js) - Google Analytics -->
+<!-- Global site tag (gtag.js) - Google Analytics
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-148562206-1"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -12,6 +12,10 @@
   gtag('js', new Date());
 
   gtag('config', 'UA-148562206-1');
+</script> -->
+
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({
@@ -21,6 +25,10 @@
     }
   });
 </script>
-<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
 <title>{{ page.title | default: site.title }}</title>
+
+<script type="text/javascript" src='{{ "/assets/d3/d3.js" | relative_url }}'></script>
+<script src='{{ "/assets/jquery-3.6.0.min.js" | relative_url }}'></script>
+
 {% seo %}
