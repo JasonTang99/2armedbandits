@@ -1,179 +1,187 @@
 <div>
     <label for="vol">Volume (between 0 and 50):</label>
-    <!-- <input type="range" id="vol" name="vol" min="0" max="15" value="1"> -->
     <input type="submit" onclick="clicked()">
+    <br/>
+
+    <div class="range-slider">
+        <input class="rs_range" autocomplete="off" type="range" value="0.01" min="0.01" max="5" step="0.01">
+        <div class="rs_display">
+            <p>$\sigma_p$:&nbsp;</p>
+            <p class="rs_value">0</p>
+        </div>
+    </div>
 
 
     <div class="range-slider">
-        <input class="range-slider__range" type="range" value="1.0" min="0.01" max="5" step="0.01">
-        <span class="range-slider__value">0</span>
+        <input class="rs_range" autocomplete="off" type="range" value="0.0" min="-5.0" max="5.0" step="0.01">
+        <div class="rs_display">
+            <p>$\mu_p$:&nbsp;</p>
+            <p class="rs_value">0</p>
+        </div>
     </div>
 
 
     <div id="draw_here" style="text-align:center;"></div>
 </div>
 
+<style>
+    .range-slider {
+        display: flex; 
+        align-items: center;
+    }
+    .rs_range {
+        width:35%;
+        margin-right: 1em;
+    }
+    .rs_display {
+        display: flex;
+    }
+</style>
+
 <script type="text/javascript">
-var rangeSlider = function(){
-    var slider = $('.range-slider'),
-        range = $('.range-slider__range'),
-        value = $('.range-slider__value');
+    // Setup sliders
+    var rangeSlider = function(){
+        var slider = $('.range-slider')
+            // range = $('.rs_range'),
+            // value = $('.rs_value');
+        
+        slider.each(function(){
+            var val = $(this).children().last().children().last()
+            var range = $(this).children().first()
+
+            console.log(val, range)
+
+            val.html(range.attr('value'))
+        //     // value.each(function(){
+        //     //     var value = $(this).parent().prev().attr('value');
+        //     //     console.log(value)
+        //     //     $(this).html(value);
+        //     // });
+            
+            range.html(val.value);
+            
+            range.on('input', function(){
+                $(this).next().children().last().html(this.value);
+            });
+        });
+    };
+    rangeSlider();
+
+
+    // Gaussian
+    xlim = [-10, 10]
+    ylim = [0.0, 2.0]
+
+    scale = 1.0
+    sigma = 1.0
+    mu = 0.0
+
+    canvas = ({width:1000, height:500})
+    margin = ({top: 20, right: 30, bottom: 30, left: 40})
+
+    x_raw = d3.range(xlim[0], xlim[1], (xlim[1] - xlim[0]) / 1000)
+    fx_gauss = Float64Array.from(x_raw, d => scale * Math.exp(-(((d - mu)**2)/(2 * sigma**2))))
+
+    data = d3.transpose([x_raw, fx_gauss]).map(d => ({x: d[0], y: d[1]}))
     
-    slider.each(function(){
-
-        value.each(function(){
-            var value = $(this).prev().attr('value');
-            $(this).html(value);
-        });
-
-        range.on('input', function(){
-            $(this).next(value).html(this.value);
-        });
-    });
-};
-
-rangeSlider();
-</script>
-
-<script type="text/javascript">
-    function kde(kernel, thresholds, data) {
-        return thresholds.map(t => [t, d3.mean(data, d => kernel(t - d))]);
-    }
-    function epanechnikov(bandwidth) {
-        return x => Math.abs(x /= bandwidth) <= 1 ? 0.75 * (1 - x * x) / bandwidth : 0;
-    }
+    x = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.x))
+        .range([margin.left, canvas.width - margin.right])
+    
+    y=d3.scaleLinear()
+        .domain(ylim)
+        .range([canvas.height - margin.bottom, margin.top])
 
     line = d3.line()
-        .curve(d3.curveBasis)
-        .x(d => x(d[0]))
-        .y(d => y(d[1]))
+        .x(d => x(d.x))
+        .y(d => y(d.y))
     
-    const promise = d3.json("/assets/faithful.json").then( function(data) {
-        console.log(data)
-
-        height = 500
-        width = 954
-        margin = ({top: 20, right: 30, bottom: 30, left: 40})
-
-        x = d3.scaleLinear()
-            .domain(d3.extent(data)).nice()
-            .range([margin.left, width - margin.right])
-
-        thresholds = x.ticks(3)
-        console.log(thresholds)
-
-        density = kde(epanechnikov(1), thresholds, data)
-        bins = d3.histogram()
-                .domain(x.domain())
-                .thresholds(thresholds)
-            (data)
-        
-        console.log(bins, height, width, thresholds, density)
-
-
-        y = d3.scaleLinear()
-            .domain([0, d3.max(bins, d => d.length) / data.length])
-            .range([height - margin.bottom, margin.top])
-        
-        xAxis = g => g
-            .attr("transform", `translate(0,${height - margin.bottom})`)
-            .call(d3.axisBottom(x))
-            .call(g => g.append("text")
-                .attr("x", width - margin.right)
-                .attr("y", -6)
-                .attr("fill", "#000")
-                .attr("text-anchor", "end")
-                .attr("font-weight", "bold")
-                .text(data.title))
-        
-        yAxis = g => g
-            .attr("transform", `translate(${margin.left},0)`)
-            .call(d3.axisLeft(y).ticks(null, "%"))
-            .call(g => g.select(".domain").remove())
-        
-        var svg = d3.select("div#draw_here").append("svg")
-            .attr("viewBox", [0, 0, width, height]);
-        
-        svg.append("g")
-            .attr("fill", "#bbb")
-            .selectAll("rect")
-            .data(bins)
-            .enter()
-            .append("rect")
-            .attr("x", d => x(d.x0) + 1)
-            .attr("y", d => y(d.length / data.length))
-            .attr("width", d => x(d.x1) - x(d.x0) - 1)
-            .attr("height", d => y(0) - y(d.length / data.length));
-        
-        console.log(line([[63, 0.07], [69, 0.05]]))
-        console.log(line(density))
-        svg.append("path").attr("id", "p2").attr("d", line([[63, 0.07], [69, 0.05]])).attr("stroke", "#060")
-        
-        svg.append("path")
-            .attr("id", "p1")
-            .attr("fill", "none")
-            .attr("stroke", "#000")
-            .attr("stroke-width", 1.5)
-            .attr("stroke-linejoin", "round")
-            .attr("d", line(density));
-
-        
-        svg.append("g")
-            .call(xAxis);
-
-        svg.append("g")
-            .call(yAxis);
-
-        return data
-    });
+    xAxis = g => g
+        .attr("transform", `translate(0,${canvas.height-margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(canvas.width / 80).tickSizeOuter(0))
     
-    function clicked() {
-        var svg = d3.select("svg")
-        svg.select("path#p2")
-            .transition()
-            .attr("d", line([[63, 0.09], [69, 0.02]])).attr("stroke", "#060")
+    yAxis = g => g
+        // .attr("transform", `translate(${canvas.width/2},0)`)
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(canvas.height / 40))
+        
+    line(data)
 
-        promise.then(function(data) {
-            var svg = d3.select("svg") // .transition();
-            density = kde(epanechnikov(7), thresholds, data)
-            console.log(density)
+        
+    var svg = d3.select("div#draw_here").append("svg")
+        .attr("viewBox", [0, 0, canvas.width, canvas.height]);
+    
+    svg.append("path")
+        .attr("id", "p1")
+        .attr("fill", "none")
+        .attr("stroke", "#000")
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("d", line(data));
+    
+    svg.append("g")
+        .call(xAxis);
 
-            console.log(svg.select("#p1"))
-
-            svg.select("#p1")
-                .transition()
-                .duration(750)
-                .attr("d", line(density))
-        });
-    }
+    svg.append("g")
+        .call(yAxis);
 
 
-    // async function myFetch() {
-    //     let response = await fetch('/assets/faithful.json');
 
-    //     if (!response.ok) {
-    //         console.log(`HTTP error! status: ${response.status}`);
-    //     }
+    // thresholds = x.ticks(50)
+    // density = kde(epanechnikov(1), thresholds, data)
 
-    //     let data = await response.json();
-    //     data = Object.assign(data, {title: "Time between eruptions (min.)"})
-    //     console.log(data)
+    // xAxis = g => g
+    //     .attr("transform", `translate(0,${height - margin.bottom})`)
+    //     .call(d3.axisBottom(x))
+    //     .call(g => g.append("text")
+    //         .attr("x", width - margin.right)
+    //         .attr("y", -6)
+    //         .attr("fill", "#000")
+    //         .attr("text-anchor", "end")
+    //         .attr("font-weight", "bold")
+    //         .text(data.title))
+    
+    // yAxis = g => g
+    //     .attr("transform", `translate(${margin.left},0)`)
+    //     .call(d3.axisLeft(y).ticks(null, "%"))
+    //     .call(g => g.select(".domain").remove())
+
+
+
+
+    // function kde(kernel, thresholds, data) {
+    //     return thresholds.map(t => [t, d3.mean(data, d => kernel(t - d))]);
+    // }
+    // function epanechnikov(bandwidth) {
+    //     return x => Math.abs(x /= bandwidth) <= 1 ? 0.75 * (1 - x * x) / bandwidth : 0;
+    // }
+
+    // line = d3.line()
+    //     .curve(d3.curveBasis)
+    //     .x(d => x(d[0]))
+    //     .y(d => y(d[1]))
+    
+    // const promise = d3.json("/assets/faithful.json").then( function(data) {
+    //     // console.log(data)
 
     //     height = 500
-    //     width = 954
+    //     width = 1000
     //     margin = ({top: 20, right: 30, bottom: 30, left: 40})
 
     //     x = d3.scaleLinear()
     //         .domain(d3.extent(data)).nice()
     //         .range([margin.left, width - margin.right])
 
-    //     thresholds = x.ticks(40)
+    //     thresholds = x.ticks(50)
 
-    //     density = kde(epanechnikov(11), thresholds, data)
+
+
+
+    //     density = kde(epanechnikov(1), thresholds, data)
     //     bins = d3.histogram()
-    //         .domain(x.domain())
-    //         .thresholds(thresholds)
-    //     (data)
+    //             .domain(x.domain())
+    //             .thresholds(thresholds)
+    //         (data)
 
     //     y = d3.scaleLinear()
     //         .domain([0, d3.max(bins, d => d.length) / data.length])
@@ -195,115 +203,52 @@ rangeSlider();
     //         .call(d3.axisLeft(y).ticks(null, "%"))
     //         .call(g => g.select(".domain").remove())
         
-        
     //     var svg = d3.select("div#draw_here").append("svg")
     //         .attr("viewBox", [0, 0, width, height]);
         
-    //     // d3.create("svg")
-
+    //     // svg.append("g")
+    //     //     .attr("fill", "#bbb")
+    //     //     .selectAll("rect")
+    //     //     .data(bins)
+    //     //     .enter()
+    //     //     .append("rect")
+    //     //     .attr("x", d => x(d.x0) + 1)
+    //     //     .attr("y", d => y(d.length / data.length))
+    //     //     .attr("width", d => x(d.x1) - x(d.x0) - 1)
+    //     //     .attr("height", d => y(0) - y(d.length / data.length));
+                
     //     svg.append("path")
-    //         .datum(density)
+    //         .attr("id", "p1")
     //         .attr("fill", "none")
     //         .attr("stroke", "#000")
     //         .attr("stroke-width", 1.5)
     //         .attr("stroke-linejoin", "round")
-    //         .attr("d", line);
-
+    //         .attr("d", line(density));
+        
     //     svg.append("g")
     //         .call(xAxis);
 
     //     svg.append("g")
     //         .call(yAxis);
 
-    //     svg.append("g")
-    //         .attr("fill", "#bbb")
-    //         .selectAll("rect")
-    //         .data(bins)
-    //         .join("rect")
-    //         .attr("x", d => x(d.x0) + 1)
-    //         .attr("y", d => y(d.length / data.length))
-    //         .attr("width", d => x(d.x1) - x(d.x0) - 1)
-    //         .attr("height", d => y(0) - y(d.length / data.length));
+    //     return data
+    // });
+    
 
-    //     console.log(svg)
+
+    // function clicked() {
+    //     console.log($(".rs_range")[0].value, $(".rs_range")[1].value)
+
+    //     promise.then(function(data) {
+    //         var svg = d3.select("svg") // .transition();
+    //         density = kde(epanechnikov($(".rs_range")[1].value), thresholds, data)
+            
+    //         svg.select("#p1")
+    //             .transition()
+    //             .duration(750)
+    //             .attr("d", line(density))
+    //     });
     // }
 
-    // myFetch()
 </script>
 
-
-<!-- <script src="http://bl.ocks.org/mbostock/raw/4061502/0a200ddf998aa75dfdb1ff32e16b680a15e5cb01/box.js"></script>
-<script>
-
-    var margin = {top: 10, right: 50, bottom: 20, left: 50},
-        width = 120 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
-    
-    var min = Infinity,
-        max = -Infinity;
-    
-    var chart = d3.box()
-        .whiskers(iqr(1.5))
-        .width(width)
-        .height(height);
-    
-    d3.csv("/assets/morley.csv", function(error, csv) {
-      var data = [];
-    
-      csv.forEach(function(x) {
-        var e = Math.floor(x.Expt - 1),
-            r = Math.floor(x.Run - 1),
-            s = Math.floor(x.Speed),
-            d = data[e];
-        if (!d) d = data[e] = [s];
-        else d.push(s);
-        if (s > max) max = s;
-        if (s < min) min = s;
-      });
-    
-      chart.domain([min, max]);
-    
-      var svg = d3.select("div#example").selectAll("svg")
-          .data(data)
-        .enter().append("svg")
-          .attr("class", "box")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.bottom + margin.top)
-        .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-          .call(chart);
-    
-      setInterval(function() {
-        svg.datum(randomize).call(chart.duration(1000));
-      }, 2000);
-    });
-    
-    function randomize(d) {
-      if (!d.randomizer) d.randomizer = randomizer(d);
-      return d.map(d.randomizer);
-    }
-    
-    function randomizer(d) {
-      var k = d3.max(d) * .02;
-      return function(d) {
-        return Math.max(min, Math.min(max, d + k * (Math.random() - .5)));
-      };
-    }
-    
-    // Returns a function to compute the interquartile range.
-    function iqr(k) {
-      return function(d, i) {
-        var q1 = d.quartiles[0],
-            q3 = d.quartiles[2],
-            iqr = (q3 - q1) * k,
-            i = -1,
-            j = d.length;
-        while (d[++i] < q1 - iqr);
-        while (d[--j] > q3 + iqr);
-        return [i, j];
-      };
-    }
-    
-</script> -->
-
-<!-- <div id="example"></div> -->

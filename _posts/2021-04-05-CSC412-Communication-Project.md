@@ -9,13 +9,12 @@ summary: ''
 
 ## HERE IT IS
 
-
-
 {% include animation-1.html %}
 
 ## Monte Carlo
+<!-- For most situations in the real world, it is difficult to calculate the transition function for an environment as we did in previous methods. Monte Carlo is a method of learning and approximating value functions that only requires experience, e.g. an agent running around an environment until it hits a goal. It is based on averaging sample discounted returns and is only defined for episodic tasks, where all episodes eventually terminate no matter what actions are chosen. This means that the estimates for each state is independent and doesn't depend on the estimates of other states.  -->
 
-For most situations in the real world, it is difficult to calculate the transition function for an environment as we did in previous methods. Monte Carlo is a method of learning and approximating value functions that only requires experience, e.g. an agent running around an environment until it hits a goal. It is based on averaging sample discounted returns and is only defined for episodic tasks, where all episodes eventually terminate no matter what actions are chosen. This means that the estimates for each state is independent and doesn't depend on the estimates of other states. 
+<!-- 
 
 ## First-Visit and Every-Visit
 
@@ -286,4 +285,4 @@ for _ in range(10000000):
 
 For now that is all we need to know about Monte Carlo methods, but we will go much more in depth with Importance Sampling and its variants in the future.
 
-[blackjack]: https://bicyclecards.com/how-to-play/blackjack/
+[blackjack]: https://bicyclecards.com/how-to-play/blackjack/ -->
