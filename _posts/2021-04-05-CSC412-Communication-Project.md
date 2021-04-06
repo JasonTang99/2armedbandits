@@ -7,10 +7,38 @@ comments: false
 summary: ''
 ---
 
+This blog post was written for my CSC412 Computer Science Communication Project. We will be looking at a general overview of Importance/Rejection Sampling along with some simulations of situations where they might be useful.
+
 ## An Overview of Importance and Rejection Sampling
-This blog post was written 
+
+When working with complicated probability distributions $p$, whether it be purely theoretical or derived from real world applications, there are 2 common problems that arise:
+
+1. Generating samples $x \sim p$. 
+2. Computing expections of functions $f(x)$ over our distribution $p$, i.e. computing 
+
+$$\mathbb{E}_{x \sim p} [f(x)] = \int  f(x) p(x) dx$$
+
+For sufficiently complex or high dimensional $p$, it becomes intractable to solve either of these problems exactly. Let's consider the situation in which we can evaluate the unnormalized $\widetilde{p\hspace{0.1em}}(x)$ for any given $x$, such that:
+
+$$p(x) = \frac{\widetilde{p\hspace{0.1em}}(x)}{Z}$$
+
+where we have the normalization constant $Z = \int \widetilde{p\hspace{0.1em}}(x) dx$. Computing this $Z$ quickly becomes difficult for complex $p$'s in high dimensions. But even with access to $Z$ (and therefore $p(x)$) it remains difficult to sample from $p$ since we need to evaluate $p(x)$ everywhere to know where we should sample from, i.e. the regions where $p(x)$ is large. 
+
+However, if we are able to solve problem 1, we can compute an unbiased, arbitrarily close  approximation to problem 2 through a simple Monte Carlo estimator:
+
+$$\mathbb{E}_{x \sim p} [f(x)] \approx \frac{1}{N} \sum_{i=1}^{N} f(x_i) = \hat{f}$$
+
+where we generate $N$ samples $x_i \sim p$. Note that this estimator can get arbitrarily close to the actual expectation since its variance scales proportionally to $\frac{1}{N}$ (no dependence on dimensionality). Therefore, we can conclude that problem 1 is a harder problem than problem 2. For now, we will focus on methods of solving problem 2 without solving problem 1, which is where Importance and Rejection Sampling comes into play.
 
 ## The Importance of Importance Sampling
+
+Since we cannot directly sample $x \sim p$ (problem 1), 
+
+We want to 
+
+coming sampling, 
+
+Importance Sampling is a method in which
 
 Useful when $p$ is a complicated distribution without a simple way to sample from.
 

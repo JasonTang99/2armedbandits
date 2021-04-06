@@ -14,12 +14,19 @@
         </div>
     </div>
 
-    <button type="button" onclick="draw_samples_unif(1)">Generate 1</button>
-    <button type="button" onclick="draw_samples_unif(10)">Generate 10</button>
-    <button type="button" onclick="draw_samples_unif(100)">Generate 100</button>
+    <div class="btn-group">
+        <button class="button" onclick="draw_samples_unif(1)">Generate 1</button>
+        <button class="button" onclick="draw_samples_unif(10)">Generate 10</button>
+        <button class="button" onclick="draw_samples_unif(100)">Generate 100</button>
+        <button class="button" onclick="draw_samples_unif(1000)">Generate 1000</button>
+        <button class="button" onclick="reset()">Reset</button>
+    </div>
+    <br/><br/>
+
+    <div style="display: flex; margin-top: 12px; margin-bottom: 0px;"><p>Current Estimate:&nbsp;</p> <p id="estimate">0.0</p></div>
 
     <div id="draw_here" style="text-align:center;"></div>
-</div>
+</div>    
 
 <style>
     .range-slider {
@@ -37,6 +44,34 @@
     .rs_p {
         margin-top: 0px;
         margin-bottom: 0px;
+    }
+
+    .btn-group {
+        margin-top: 20px;
+    }
+    .btn-group .button {
+        background-color: #ebebeb;
+        border: 1px solid #cbcbcb;
+        color: black;
+        padding: 10px 15px;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        float: left;
+    }
+    .btn-group .button:not(:last-child) {
+        border-right: none;
+    }
+    .btn-group .button:nth-last-child(2) {
+        border-right: 1px solid #cbcbcb;
+    }
+
+    .btn-group .button:last-child { 
+        margin-left: 10px;
+    }
+
+    .btn-group .button:hover {
+        background-color: #dbdbdb;
     }
 </style>
 
@@ -165,13 +200,12 @@
         fx_unif = Float64Array.from(samples, d => (d <= 6 & d >= 1) ? 0.2 : 0.0)
 
         
-        for (i = 0; i < fx_gauss.length; i++) {
-            // console.log(samples[i], fx_gauss[i], fx_unif[i], fx_unif[i] / fx_gauss[i])
-            
+        for (i = 0; i < fx_gauss.length; i++) {            
             curr_sum += samples[i] * fx_unif[i] / fx_gauss[i]
             curr_count += fx_unif[i] / fx_gauss[i]
 
-            svg.append("path")
+            svg.insert("path", "#p1")
+                .attr("class", "sample")
                 .attr("fill", "none")
                 .attr("stroke", "#111")
                 .attr("stroke-width", 0.5)
@@ -179,10 +213,18 @@
                 .attr("d", line2([
                     [samples[i], ylim[0]], [samples[i], ylim[1]]
                 ]));
-            
         }
 
-        console.log(curr_sum, curr_count, curr_sum / curr_count)
+        if (curr_sum > 0) {
+            d3.select("#estimate").text(curr_sum / curr_count)
+        }
+    }
+
+    function reset() {
+        d3.selectAll(".sample").remove()
+        curr_sum = 0
+        curr_count = 0
+        d3.select("#estimate").text(0.0)
     }
 
 
