@@ -1,25 +1,22 @@
 <div>
-    <label for="vol">Volume (between 0 and 50):</label>
-    <input type="submit" onclick="clicked()">
-    <br/>
-
-    <div class="range-slider">
-        <input class="rs_range" autocomplete="off" type="range" value="0.01" min="0.01" max="5" step="0.01">
-        <div class="rs_display">
-            <p>$\sigma_p$:&nbsp;</p>
-            <p class="rs_value">0</p>
-        </div>
-    </div>
-
-
     <div class="range-slider">
         <input class="rs_range" autocomplete="off" type="range" value="0.0" min="-5.0" max="5.0" step="0.01">
         <div class="rs_display">
-            <p>$\mu_p$:&nbsp;</p>
-            <p class="rs_value">0</p>
+            <p class="rs_p">$\mu_q$:&nbsp;</p>
+            <p class="rs_value rs_p">0</p>
+        </div>
+    </div>
+    <div class="range-slider">
+        <input class="rs_range" autocomplete="off" type="range" value="1.0" min="1.0" max="5" step="0.01">
+        <div class="rs_display">
+            <p class="rs_p">$\sigma_q$:&nbsp;</p>
+            <p class="rs_value rs_p">0</p>
         </div>
     </div>
 
+    <button type="button" onclick="draw_samples_unif(1)">Generate 1</button>
+    <button type="button" onclick="draw_samples_unif(10)">Generate 10</button>
+    <button type="button" onclick="draw_samples_unif(100)">Generate 100</button>
 
     <div id="draw_here" style="text-align:center;"></div>
 </div>
@@ -28,6 +25,7 @@
     .range-slider {
         display: flex; 
         align-items: center;
+        margin-bottom: 8px;
     }
     .rs_range {
         width:35%;
@@ -36,30 +34,21 @@
     .rs_display {
         display: flex;
     }
+    .rs_p {
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
 </style>
 
 <script type="text/javascript">
-    // Setup sliders
+    // Setup Sliders
     var rangeSlider = function(){
         var slider = $('.range-slider')
-            // range = $('.rs_range'),
-            // value = $('.rs_value');
-        
         slider.each(function(){
             var val = $(this).children().last().children().last()
             var range = $(this).children().first()
 
-            console.log(val, range)
-
-            val.html(range.attr('value'))
-        //     // value.each(function(){
-        //     //     var value = $(this).parent().prev().attr('value');
-        //     //     console.log(value)
-        //     //     $(this).html(value);
-        //     // });
-            
-            range.html(val.value);
-            
+            val.html(range.attr('value'))            
             range.on('input', function(){
                 $(this).next().children().last().html(this.value);
             });
@@ -67,23 +56,30 @@
     };
     rangeSlider();
 
-
-    // Gaussian
-    xlim = [-10, 10]
-    ylim = [0.0, 2.0]
-
-    scale = 1.0
-    sigma = 1.0
-    mu = 0.0
-
+    // Compute Gaussian
     canvas = ({width:1000, height:500})
     margin = ({top: 20, right: 30, bottom: 30, left: 40})
+    blue = "#4063d8"
+    purple = "#9558b2"
+    red = "#cb3c33"
+    green = "#389826"
+
+    l_blue = "#5073e8"
+    l_red = "#db4c43"
+    
+    xlim = [-10, 10]
+    ylim = [0.0, 0.5]
+
+    mu = 0.0
+    sigma = 1.0
+    scale = 1.0 / Math.sqrt(2 * Math.PI * sigma**2)
 
     x_raw = d3.range(xlim[0], xlim[1], (xlim[1] - xlim[0]) / 1000)
     fx_gauss = Float64Array.from(x_raw, d => scale * Math.exp(-(((d - mu)**2)/(2 * sigma**2))))
 
     data = d3.transpose([x_raw, fx_gauss]).map(d => ({x: d[0], y: d[1]}))
     
+    // Setup Chart
     x = d3.scaleLinear()
         .domain(d3.extent(data, d => d.x))
         .range([margin.left, canvas.width - margin.right])
@@ -91,39 +87,104 @@
     y=d3.scaleLinear()
         .domain(ylim)
         .range([canvas.height - margin.bottom, margin.top])
-
-    line = d3.line()
-        .x(d => x(d.x))
-        .y(d => y(d.y))
     
     xAxis = g => g
         .attr("transform", `translate(0,${canvas.height-margin.bottom})`)
         .call(d3.axisBottom(x).ticks(canvas.width / 80).tickSizeOuter(0))
     
     yAxis = g => g
-        // .attr("transform", `translate(${canvas.width/2},0)`)
         .attr("transform", `translate(${margin.left},0)`)
         .call(d3.axisLeft(y).ticks(canvas.height / 40))
-        
-    line(data)
-
-        
+    
     var svg = d3.select("div#draw_here").append("svg")
         .attr("viewBox", [0, 0, canvas.width, canvas.height]);
     
+    // Draw q
+    line = d3.line()
+        .x(d => x(d.x))
+        .y(d => y(d.y))
+
     svg.append("path")
         .attr("id", "p1")
         .attr("fill", "none")
-        .attr("stroke", "#000")
+        .attr("stroke", l_blue)
         .attr("stroke-width", 1.5)
         .attr("stroke-linejoin", "round")
         .attr("d", line(data));
+    
+    // Draw p
+    line2 = d3.line()
+        .x(d => x(d[0]))
+        .y(d => y(d[1]))
+    
+    svg.append("path")
+        .attr("id", "q1")
+        .attr("fill", "none")
+        .attr("stroke", l_red)
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("d", line2([
+            [xlim[0], ylim[0]], [1, ylim[0]], [1, 0.2], [6, 0.2], [6, ylim[0]], [xlim[1], ylim[0]]
+        ]));
     
     svg.append("g")
         .call(xAxis);
 
     svg.append("g")
         .call(yAxis);
+
+    function transition() {
+        mu = $(".rs_range")[0].value
+        sigma = $(".rs_range")[1].value
+        scale = 1.0 / Math.sqrt(2 * Math.PI * sigma**2)
+
+        fx_gauss = Float64Array.from(x_raw, d => scale * Math.exp(-(((d - mu)**2)/(2 * sigma**2))))
+        data = d3.transpose([x_raw, fx_gauss]).map(d => ({x: d[0], y: d[1]}))
+        
+        d3.select("path#p1")
+            // .transition()
+            // .duration(250)
+            .attr("d", line(data))
+    }
+
+    d3.selectAll(".rs_range")
+        .on("input", function() {transition()})
+    
+    // Generate Samples
+    curr_sum = 0
+    curr_count = 0
+
+    function draw_samples_unif(n) {
+        mu = $(".rs_range")[0].value
+        sigma = $(".rs_range")[1].value
+
+        samples = d3.range(n).map(function() {return d3.randomNormal(mu, sigma)();})
+
+        scale = 1.0 / Math.sqrt(2 * Math.PI * sigma**2)
+        fx_gauss = Float64Array.from(samples, d => scale * Math.exp(-(((d - mu)**2)/(2 * sigma**2))))
+        fx_unif = Float64Array.from(samples, d => (d <= 6 & d >= 1) ? 0.2 : 0.0)
+
+        
+        for (i = 0; i < fx_gauss.length; i++) {
+            // console.log(samples[i], fx_gauss[i], fx_unif[i], fx_unif[i] / fx_gauss[i])
+            
+            curr_sum += samples[i] * fx_unif[i] / fx_gauss[i]
+            curr_count += fx_unif[i] / fx_gauss[i]
+
+            svg.append("path")
+                .attr("fill", "none")
+                .attr("stroke", "#111")
+                .attr("stroke-width", 0.5)
+                .attr("stroke-linejoin", "round")
+                .attr("d", line2([
+                    [samples[i], ylim[0]], [samples[i], ylim[1]]
+                ]));
+            
+        }
+
+        console.log(curr_sum, curr_count, curr_sum / curr_count)
+    }
+
 
 
 
@@ -145,8 +206,6 @@
     //     .attr("transform", `translate(${margin.left},0)`)
     //     .call(d3.axisLeft(y).ticks(null, "%"))
     //     .call(g => g.select(".domain").remove())
-
-
 
 
     // function kde(kernel, thresholds, data) {
@@ -234,21 +293,5 @@
     //     return data
     // });
     
-
-
-    // function clicked() {
-    //     console.log($(".rs_range")[0].value, $(".rs_range")[1].value)
-
-    //     promise.then(function(data) {
-    //         var svg = d3.select("svg") // .transition();
-    //         density = kde(epanechnikov($(".rs_range")[1].value), thresholds, data)
-            
-    //         svg.select("#p1")
-    //             .transition()
-    //             .duration(750)
-    //             .attr("d", line(density))
-    //     });
-    // }
-
 </script>
 

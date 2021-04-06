@@ -7,9 +7,107 @@ comments: false
 summary: ''
 ---
 
-## HERE IT IS
+## An Overview of Importance and Rejection Sampling
+This blog post was written 
+
+## The Importance of Importance Sampling
+
+Useful when $p$ is a complicated distribution without a simple way to sample from.
+
+Enables us to learn something about a target distribution $p$ without ever needing to sample from $p$.
+
+
+<!-- Let's use another distribution q(x) = q'(x) / Z instead
+Simpler distribution q', ie. Gaussian
+Must be easy to sample and to compute density
+Support of q must also be the support of p
+
+Importance Sampling
+Areas where q > p and others where q < p
+Overrepresented and underrepresented areas, good idea to resample with importance weighting:
+For sample x_r ~ q, importance weights w'_r = p'(x_r) / q'(x_r), and if we have access to normalized weights, we have: w_r = p(x_r) / q(x_r)
+
+int f(x) p(x) dx = int f(x) p(x) q(x) / q(x) dx
+= int f(x) w(x) q(x) dx
+= E_{x ~ q} [f(x) w(x)]
+So we only need to sample from q, which we know how to do already
+This is approximately equal to 
+1/N sum f(x_r) w_r
+where x_r ~ q.
+This is our importance weighted estimator
+
+Lets consider the unormalized ones
+p = p' / Z_p, q = q' / Z_q
+w'_r = p' / q'
+w_r = (p' / Z_p) / (q' / Z_q)
+int f(x) w(x) q(x) dx = Z_q/Z_p int f(x) w'(x) q(x) dx
+
+Z_p / Z_q approx 1/R sum_r w'(x_r)
+
+Issue: if p << q, then w -> 0, and if q << p, then w -> inf
+Numerical issues, especially in high dimensions
+
+Rejection Sampling
+Consider cq', where c is a scalar multiple s.t. cq' > p over the entire support
+This approximates a bounding box
+1. Sample x ~ q, the proposal
+2. Sample u ~ Uniform[0, cq'(x)]
+3. if p'(x) < u, reject
+else, accept
+Therefore, x ~ p
+Works only if p approx q, which becomes difficult in higher dimensions, namely since small differences in max heights in small dimensions grow exponentially as dimension increases, i.e. our c -> inf, and the ratio of area under cq' and p is 1/c, so very unlikely to accept
+
+Metropolis idea
+Local proposals based on the current sample
+Let's say we start with sample x^0, can evaluate p'(x^0)
+Proposal: x^{t+1} ~ q(x | x^t)
+Correction: a = p'(x^{t+1}) / p'(x^t)
+
+example
+q = N(x | mean = x^{t})
+
+If a < 1, then proposal is less likely
+If a > 1, then proposal is better, so we go there
+
+Accept bad samples sometimes, in order to not be stuck
+accept x^{t+1} with probability a
+
+Metropolis Hastings adds on the usage of other distributions, i.e. nonsymmetric distributions
+So we modify our correction term
+a = p'(x^{t+1}) q(x^t | x^{t+1}) / p'(x^t) q(x^{t+1} | x^t)
+So this accounts for the lack of symmetry in the acceptance step
+
+This sampling is no longer iid, we will fix this later with MC
+Finding a proper MCMC proposal distribution to traverse this is difficult
+
+Markov Chain generates a chain of points inside typical set of p
+{x^0, x^1, x^2, ..., x^N} ~ p
+Done by specifying "Markov Transitions" want to generate x^{t+1} ~ T(x^{t+1} | x^t)
+But x^{t+1} is not independent of x^t
+
+p(x) is invariant under T, ie. p(x) = int T(x|x') p(x') dx'
+If x' ~ p and x ~ T(x|x'), then E_{x' ~ p} [T(x|x')] = p(x), i.e. x ~ p
+Basically, once we get in there, we stay there
+
+p(x) is Ergodic if p^(t) (x) -> p(x) for all p^0(x)
+i.e. the distribution approaches p(x) no matter the starting distribution p^0(x)
+
+If both these are true, then asymptotically (t -> inf), x ~ p iid
+
+Can slide around this typical set using gradients of the likelihood function, and then go perpendicular to it, i.e. the vector field made by the normals, so we turn it into a problem from a postion, into a problem related to the velocity -->
+
+## A Basic Example of Importance Sampling
+Let's suppose that we're working in a 1 dimensional space and we want to find the average over our very simple target distribution $p = Uniform[1, 6]$. We know from elementary statistics that:
+
+$$\mathbb{E}_{x \sim p} [x] = \frac{1 + 6}{2} = 3.5$$
+
+In addition, almost every mathematical package out there can sample from a Uniform distribution. But for the purposes of demonstration, let's assume that we can only sample from a 1-D normal distribution defined as $q = \mathcal{N}( \mu_q, \sigma_q^2 )$. We will utilize samples $x \sim q$ and importance sampling to approximate the value: $\mathbb{E}_{x \sim p} [x]$ (which we know should be $3.5$).
 
 {% include animation-1.html %}
+
+
+## Why We Shouldn't Reject Rejection Sampling
+
 
 ## Monte Carlo
 <!-- For most situations in the real world, it is difficult to calculate the transition function for an environment as we did in previous methods. Monte Carlo is a method of learning and approximating value functions that only requires experience, e.g. an agent running around an environment until it hits a goal. It is based on averaging sample discounted returns and is only defined for episodic tasks, where all episodes eventually terminate no matter what actions are chosen. This means that the estimates for each state is independent and doesn't depend on the estimates of other states.  -->
