@@ -1,0 +1,189 @@
+<div id="animation_2">
+    <div class="range-slider">
+        <input class="rs_range" autocomplete="off" type="range" value="0.0" min="-5.0" max="5.0" step="0.01">
+        <div class="rs_display">
+            <p class="rs_p">$\mu_q$:&nbsp;</p>
+            <p class="rs_value rs_p">0</p>
+        </div>
+    </div>
+    <div class="range-slider">
+        <input class="rs_range" autocomplete="off" type="range" value="1.0" min="1.0" max="5" step="0.01">
+        <div class="rs_display">
+            <p class="rs_p">$\sigma_q$:&nbsp;</p>
+            <p class="rs_value rs_p">0</p>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="button" onclick="draw_samples_2(1)">Generate 1</button>
+        <button class="button" onclick="draw_samples_2(10)">Generate 10</button>
+        <button class="button" onclick="draw_samples_2(100)">Generate 100</button>
+        <button class="button" onclick="draw_samples_2(1000)">Generate 1000</button>
+        <button class="button" onclick="reset_2()">Reset</button>
+    </div>
+
+    <div class="display-div" style="margin-top: 12px;"><p class="display-txt">Current $\sum_{i=1}^{N} f(x_i) \widetilde{w}(x_i)$:&nbsp;</p> <p class="display-txt" id="denom_2">0.0</p></div>
+    <div class="display-div"><p class="display-txt">Current $\sum_{i=1}^N \widetilde{w}(x_i)$:&nbsp;</p> <p class="display-txt" id="numer_2">0.0</p></div>
+    <div class="display-div"><p class="display-txt">Current estimate of $\mathbb{E}_{x \sim p} [x]$:&nbsp;</p> <p class="display-txt" id="estimate_2">0.0</p></div>
+
+    <div id="draw_here_2" style="text-align:center;"></div>
+</div>
+
+<script type="text/javascript">
+    // Setup Sliders
+    var rangeSlider = function(){
+        var slider = $('.range-slider')
+        slider.each(function(){
+            var val = $(this).children().last().children().last()
+            var range = $(this).children().first()
+
+            val.html(range.attr('value'))            
+            range.on('input', function(){
+                $(this).next().children().last().html(this.value);
+            });
+        });
+    };
+    rangeSlider();
+
+    // Compute Gaussian
+    canvas = ({width:1000, height:500})
+    margin = ({top: 20, right: 30, bottom: 30, left: 40})
+    blue = "#4063d8"
+    purple = "#9558b2"
+    red = "#cb3c33"
+    green = "#389826"
+
+    l_blue = "#5073e8"
+    l_red = "#db4c43"
+    
+    a = 1.0
+    xlim_2 = [-10, 10]
+    ylim_2 = [0.0, 0.8]
+
+    mu_2 = 0.0
+    sigma_2 = 1.0
+    scale_2 = 1.0 / Math.sqrt(2 * Math.PI * sigma_2**2)
+
+    x_raw_2 = d3.range(xlim_2[0], xlim_2[1], (xlim_2[1] - xlim_2[0]) / 1000)
+    fx_gauss_2 = Float64Array.from(x_raw_2, d => scale_2 * Math.exp(-(((d - mu_2)**2)/(2 * sigma_2**2))))
+    
+    fx_fancy = Float64Array.from(x_raw_2, d => 0.25 * Math.exp(0.4 * (d - 0.4)**2 - 0.08 * d**4))
+
+    data_2 = d3.transpose([x_raw_2, fx_gauss_2]).map(d => ({x: d[0], y: d[1]}))
+    data_fancy = d3.transpose([x_raw_2, fx_fancy]).map(d => ({x: d[0], y: d[1]}))
+    
+    // Setup Chart
+    x_2 = d3.scaleLinear()
+        .domain(d3.extent(data_2, d => d.x))
+        .range([margin.left, canvas.width - margin.right])
+    
+    y_2 = d3.scaleLinear()
+        .domain(ylim_2)
+        .range([canvas.height - margin.bottom, margin.top])
+    
+    xAxis_2 = g => g
+        .attr("transform", `translate(0,${canvas.height-margin.bottom})`)
+        .call(d3.axisBottom(x_2).ticks(canvas.width / 80).tickSizeOuter(0))
+    
+    yAxis_2 = g => g
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y_2).ticks(canvas.height / 40))
+    
+    var svg_2 = d3.select("div#draw_here_2").append("svg")
+        .attr("viewBox", [0, 0, canvas.width, canvas.height]);
+    
+    // Draw q
+    line_class_2 = d3.line()
+        .x(d => x_2(d.x))
+        .y(d => y_2(d.y))
+
+    svg_2.append("path")
+        .attr("id", "q_2")
+        .attr("fill", "none")
+        .attr("stroke", l_blue)
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("d", line_class_2(data_2));
+    
+    // Draw p
+    line_array_2 = d3.line()
+        .x(d => x_2(d[0]))
+        .y(d => y_2(d[1]))
+
+    svg_2.append("path")
+        .attr("id", "p_2")
+        .attr("fill", "none")
+        .attr("stroke", l_red)
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("d", line_class_2(data_fancy));
+    
+    svg_2.append("g")
+        .call(xAxis_2);
+
+    svg_2.append("g")
+        .call(yAxis_2);
+
+    function transition_2() {
+        mu_2 = d3.select("#animation_2").selectAll(".rs_range").nodes()[0].value
+        sigma_2 = d3.select("#animation_2").selectAll(".rs_range").nodes()[1].value
+        scale_2 = 1.0 / Math.sqrt(2 * Math.PI * sigma_2**2)
+
+        fx_gauss_2 = Float64Array.from(x_raw_2, d => scale_2 * Math.exp(-(((d - mu_2)**2)/(2 * sigma_2**2))))
+        data_2 = d3.transpose([x_raw_2, fx_gauss_2]).map(d => ({x: d[0], y: d[1]}))
+        
+        d3.select("path#q_2")
+            // .transition()
+            // .duration(250)
+            .attr("d", line_class_2(data_2))
+    }
+
+    d3.select("#animation_2").selectAll(".rs_range")
+        .on("input", function() {transition_2()})
+    
+    // Generate Samples
+    curr_sum_2 = 0
+    curr_count_2 = 0
+
+    function draw_samples_2(n) {
+        mu_2 = d3.select("#animation_2").selectAll(".rs_range").nodes()[0].value
+        sigma_2 = d3.select("#animation_2").selectAll(".rs_range").nodes()[1].value
+
+        samples = d3.range(n).map(function() {return d3.randomNormal(mu_2, sigma_2)();})
+
+        scale_2 = 1.0 / Math.sqrt(2 * Math.PI * sigma_2**2)
+        fx_gauss_2 = Float64Array.from(samples, d => scale_2 * Math.exp(-(((d - mu_2)**2)/(2 * sigma_2**2))))
+        fx_target = Float64Array.from(samples, d => 0.25 * Math.exp(0.4 * (d - 0.4)**2 - 0.08 * d**4))
+
+        
+        for (i = 0; i < fx_gauss_2.length; i++) {            
+            curr_sum_2 += samples[i] * fx_target[i] / fx_gauss_2[i]
+            curr_count_2 += fx_target[i] / fx_gauss_2[i]
+
+            svg_2.insert("path", "#q_2")
+                .attr("class", "sample_2")
+                .attr("fill", "none")
+                .attr("stroke", "#111")
+                .attr("stroke-width", 0.5)
+                .attr("stroke-linejoin", "round")
+                .attr("d", line_array_2([
+                    [samples[i], ylim_2[0]], [samples[i], ylim_2[1]]
+                ]));
+        }
+
+        if (curr_count_2 > 0) {
+            d3.select("#denom_2").text(Number((curr_sum_2).toFixed(4)))
+            d3.select("#numer_2").text(Number((curr_count_2).toFixed(4)))
+            d3.select("#estimate_2").text(Number((curr_sum_2 / curr_count_2).toFixed(4)))
+        }
+    }
+
+    function reset_2() {
+        d3.selectAll(".sample_2").remove()
+        curr_sum_2 = 0
+        curr_count_2 = 0
+        d3.select("#estimate_2").text("0.0")
+        d3.select("#denom_2").text("0.0")
+        d3.select("#numer_2").text("0.0")
+    }
+</script>

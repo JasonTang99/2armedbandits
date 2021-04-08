@@ -1,0 +1,65 @@
+<div id="animation_7">
+    <div id="draw_here_7" style="text-align:center;"></div>
+</div>
+
+<script type="text/javascript">
+    // Compute Gaussian
+    canvas = ({width:1000, height:500})
+    margin = ({top: 20, right: 30, bottom: 30, left: 40})
+
+    l_blue = "#5073e8"
+    l_red = "#db4c43"
+    
+    xlim_7 = [1, 20]
+    ylim_7 = [0.0, 1.0]
+
+    x_raw_7 = d3.range(1, 21)
+    console.log(x_raw_7)
+
+    
+    data_fancy = [
+        [1, 0.9891], [2, 0.9609], [3, 0.9126], [4, 0.8557], [5, 0.7854], 
+        [6, 0.6987], [7, 0.6146], [8, 0.5294], [9, 0.4471], [10, 0.3724], 
+        [11, 0.2964], [12, 0.2323], [13, 0.184], [14, 0.141], [15, 0.105], 
+        [16, 0.0796], [17, 0.0545], [18, 0.038], [19, 0.0297], [20, 0.0193]
+    ]
+    
+    // Setup Chart
+    x_7 = d3.scaleLinear()
+        .domain(xlim_7)
+        .range([margin.left, canvas.width - margin.right])
+    
+    y_7 = d3.scaleLinear()
+        .domain(ylim_7)
+        .range([canvas.height - margin.bottom, margin.top])
+    
+    xAxis_7 = g => g
+        .attr("transform", `translate(0,${canvas.height-margin.bottom})`)
+        .call(d3.axisBottom(x_7).ticks(canvas.width / 80).tickSizeOuter(0))
+    
+    yAxis_7 = g => g
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y_7).ticks(canvas.height / 40))
+    
+    var svg_7 = d3.select("div#draw_here_7").append("svg")
+        .attr("viewBox", [0, 0, canvas.width, canvas.height]);
+    
+    // Draw p
+    line_array_7 = d3.line()
+        .x(d => x_7(d[0]))
+        .y(d => y_7(d[1]))
+
+    svg_7.append("path")
+        .attr("id", "p_7")
+        .attr("fill", "none")
+        .attr("stroke", l_red)
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("d", line_array_7(data_fancy));
+    
+    svg_7.append("g")
+        .call(xAxis_7);
+
+    svg_7.append("g")
+        .call(yAxis_7);
+</script>

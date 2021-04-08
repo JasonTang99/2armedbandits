@@ -7,22 +7,22 @@ comments: false
 summary: ''
 ---
 
-This blog post was written for my CSC412 Computer Science Communication Project. We will be looking at a general overview of Importance/Rejection Sampling along with some simulations of situations where they might be useful.
+This blog post was written for my CSC412 Computer Science Communication Project. We will be looking at a general overview of Importance/Rejection Sampling along with some simulations of situations where they might be useful. I will be summarizing information from both lectures and the textbook "Information Theory, Inference, and Learning Algorithms" by David Mackay and will be presenting it along with animations powered by the <a href="https://d3js.org/" target="_blank">D3</a> Library. To view the code used to run this blog, take a look at my <a href="https://github.com/2armedbandits/2armedbandits.github.io" target="_blank">Github Repo</a>.
 
 ## An Overview of Importance and Rejection Sampling
 
 When working with complicated probability distributions $p$, whether it be purely theoretical or derived from real world applications, there are 2 common problems that arise:
 
 1. Generating samples $x \sim p$. 
-2. Computing expections of functions $f(x)$ over our distribution $p$, i.e. computing 
+2. Computing expectations of functions $f(x)$ over our distribution $p$, i.e. computing 
 
 $$\mathbb{E}_{x \sim p} [f(x)] = \int  f(x) p(x) dx$$
 
 For sufficiently complex or high dimensional $p$, it becomes intractable to solve either of these problems exactly. Let's consider the situation in which we can evaluate the unnormalized $\widetilde{p\hspace{0.1em}}(x)$ for any given $x$, such that:
 
-$$p(x) = \frac{\widetilde{p\hspace{0.1em}}(x)}{Z}$$
+$$p(x) = \frac{\widetilde{p\hspace{0.1em}}(x)}{Z_p}$$
 
-where we have the normalization constant $Z = \int \widetilde{p\hspace{0.1em}}(x) dx$. Computing this $Z$ quickly becomes difficult for complex $p$'s in high dimensions. But even with access to $Z$ (and therefore $p(x)$) it remains difficult to sample from $p$ since we need to evaluate $p(x)$ everywhere to know where we should sample from, i.e. the regions where $p(x)$ is large. 
+where we have the normalization constant $Z_p = \int \widetilde{p\hspace{0.1em}}(x) dx$. Computing this $Z_p$ quickly becomes difficult for complex $p$'s in high dimensions. But even with access to $Z_p$ (and therefore $p(x)$) it remains difficult to sample from $p$ since we need to evaluate $p(x)$ everywhere to know where we should sample from, i.e. the regions where $p(x)$ is large. 
 
 However, if we are able to solve problem 1, we can compute an unbiased, arbitrarily close  approximation to problem 2 through a simple Monte Carlo estimator:
 
@@ -32,383 +32,157 @@ where we generate $N$ samples $x_i \sim p$. Note that this estimator can get arb
 
 ## The Importance of Importance Sampling
 
-Since we cannot directly sample $x \sim p$ (problem 1), 
+Since we cannot directly sample $x \sim p$ (problem 1), we will instead sample from some simpler distribution $q$. We will assume that we can easily generate samples $x \sim q$ and are able to compute an unnormalized $\widetilde{q\hspace{0.15em}}$, such that:
 
-We want to 
+$$q(x) = \frac{\widetilde{q\hspace{0.15em}}(x)}{Z_q}$$
 
-coming sampling, 
+We then generate $N$ samples $\{x_i\}_{i=1}^N$ with $x_i \sim q$. Since these samples are drawn from $q$ rather than $p$, we need to adjust the weighting of each sample depending on how likely they are to be sampled by both $p$ and $q$. Namely, we compute an importance weight:
 
-Importance Sampling is a method in which
+$$\widetilde{w}(x) = \frac{\widetilde{p\hspace{0.1em}}(x)}{\widetilde{q\hspace{0.15em}}(x)}$$
 
-Useful when $p$ is a complicated distribution without a simple way to sample from.
+Assuming that $q$ and $p$ are different distributions, this adjusts the importance of samples in regions where $p$ is overrepresented by $q$ ($q > p$), and regions where $p$ is underrepresented ($p > q$). We also require that the support of $p$ is captured entirely by the support of $q$. In other words, for some point $x$, if $p(x) > 0$, then $q(x) > 0$ as well. This ensures that we have asymptotic convergence to the real mean $ \mathbb{E}_{x \sim p} [f(x)]$. Otherwise, there would exist regions where $p$ might sample from that our samples from $q$ would never visit. These restrictions make the normal distribution an ideal candidate for $q$, with support over all real numbers and being easy to sample from. It is especially useful in higher dimensions where it remains easy to sample from, unlike many other distributions.
 
-Enables us to learn something about a target distribution $p$ without ever needing to sample from $p$.
+Now we will derive how this importance weighting fits into our original goal of problem 2:
+
+$$
+\begin{align*}
+\int  f(x) p(x) dx &= \int  f(x) p(x) \frac{q(x)}{q(x)} dx\\
+&= \int  f(x) \frac{\widetilde{p\hspace{0.1em}}(x)}{Z_p} \frac{q(x) Z_q}{\widetilde{q\hspace{0.15em}}(x)} dx\\
+&= \int  f(x) \frac{\widetilde{p\hspace{0.1em}}(x)}{\widetilde{q\hspace{0.15em}}(x)} \frac{ Z_q}{Z_p}q(x) dx\\
+&=  \frac{ Z_q}{Z_p} \int  f(x) \widetilde{w}(x) q(x) dx\\
+&= \frac{ Z_q}{Z_p} \mathbb{E}_{x \sim q} [f(x) \widetilde{w}(x)]\\
+&\approx \frac{ Z_q}{Z_p} \frac{1}{N} \sum_{i=1}^{N} f(x_i) \widetilde{w}(x_i)\\
+\end{align*}
+$$
+
+Let's consider the case where we do not have access to the normalization constants $Z_q$ or $Z_p$, we can still approximate it by first considering the expected value of an importance weight over samples drawn from $q$:
+
+$$
+\begin{align*}
+\mathbb{E}_{x \sim q} [\widetilde{w}(x)] &= \int \widetilde{w}(x) q(x) dx\\
+&= \int \frac{\widetilde{p\hspace{0.1em}}(x)}{\widetilde{q\hspace{0.15em}}(x)} q(x) dx\\
+&= \int \frac{ q(x)}{\widetilde{q\hspace{0.15em}}(x)} \widetilde{p\hspace{0.1em}}(x) dx\\
+&= \frac{1}{Z_q} \int \widetilde{p\hspace{0.1em}}(x) dx\\
+&= \frac{Z_p}{Z_q} \\
+\end{align*}
+$$
+
+Since we have $N$ samples from $q$, we can estimate the ratio $\frac{ Z_p}{Z_q}$ with a Monte Carlo estimator:
+
+$$\frac{ Z_p}{Z_q} = \mathbb{E}_{x \sim q} [\widetilde{w}(x)] \approx \frac{1}{N} \sum_{i=1}^N \widetilde{w}(x_i)$$
 
 
-<!-- Let's use another distribution q(x) = q'(x) / Z instead
-Simpler distribution q', ie. Gaussian
-Must be easy to sample and to compute density
-Support of q must also be the support of p
+Plugging this into our original equation, we get:
 
-Importance Sampling
-Areas where q > p and others where q < p
-Overrepresented and underrepresented areas, good idea to resample with importance weighting:
-For sample x_r ~ q, importance weights w'_r = p'(x_r) / q'(x_r), and if we have access to normalized weights, we have: w_r = p(x_r) / q(x_r)
+$$
+\begin{align*}
+\int  f(x) p(x) dx &\approx N \frac{1}{\sum_{i=1}^N \widetilde{w}(x_i)}  \frac{1}{N} \sum_{i=1}^{N} f(x_i) \widetilde{w}(x_i)\\
+&\approx \frac{\sum_{i=1}^{N} f(x_i) \widetilde{w}(x_i)}{\sum_{i=1}^N \widetilde{w}(x_i)}  \\
+\end{align*}
+$$
 
-int f(x) p(x) dx = int f(x) p(x) q(x) / q(x) dx
-= int f(x) w(x) q(x) dx
-= E_{x ~ q} [f(x) w(x)]
-So we only need to sample from q, which we know how to do already
-This is approximately equal to 
-1/N sum f(x_r) w_r
-where x_r ~ q.
-This is our importance weighted estimator
-
-Lets consider the unormalized ones
-p = p' / Z_p, q = q' / Z_q
-w'_r = p' / q'
-w_r = (p' / Z_p) / (q' / Z_q)
-int f(x) w(x) q(x) dx = Z_q/Z_p int f(x) w'(x) q(x) dx
-
-Z_p / Z_q approx 1/R sum_r w'(x_r)
-
-Issue: if p << q, then w -> 0, and if q << p, then w -> inf
-Numerical issues, especially in high dimensions
-
-Rejection Sampling
-Consider cq', where c is a scalar multiple s.t. cq' > p over the entire support
-This approximates a bounding box
-1. Sample x ~ q, the proposal
-2. Sample u ~ Uniform[0, cq'(x)]
-3. if p'(x) < u, reject
-else, accept
-Therefore, x ~ p
-Works only if p approx q, which becomes difficult in higher dimensions, namely since small differences in max heights in small dimensions grow exponentially as dimension increases, i.e. our c -> inf, and the ratio of area under cq' and p is 1/c, so very unlikely to accept
-
-Metropolis idea
-Local proposals based on the current sample
-Let's say we start with sample x^0, can evaluate p'(x^0)
-Proposal: x^{t+1} ~ q(x | x^t)
-Correction: a = p'(x^{t+1}) / p'(x^t)
-
-example
-q = N(x | mean = x^{t})
-
-If a < 1, then proposal is less likely
-If a > 1, then proposal is better, so we go there
-
-Accept bad samples sometimes, in order to not be stuck
-accept x^{t+1} with probability a
-
-Metropolis Hastings adds on the usage of other distributions, i.e. nonsymmetric distributions
-So we modify our correction term
-a = p'(x^{t+1}) q(x^t | x^{t+1}) / p'(x^t) q(x^{t+1} | x^t)
-So this accounts for the lack of symmetry in the acceptance step
-
-This sampling is no longer iid, we will fix this later with MC
-Finding a proper MCMC proposal distribution to traverse this is difficult
-
-Markov Chain generates a chain of points inside typical set of p
-{x^0, x^1, x^2, ..., x^N} ~ p
-Done by specifying "Markov Transitions" want to generate x^{t+1} ~ T(x^{t+1} | x^t)
-But x^{t+1} is not independent of x^t
-
-p(x) is invariant under T, ie. p(x) = int T(x|x') p(x') dx'
-If x' ~ p and x ~ T(x|x'), then E_{x' ~ p} [T(x|x')] = p(x), i.e. x ~ p
-Basically, once we get in there, we stay there
-
-p(x) is Ergodic if p^(t) (x) -> p(x) for all p^0(x)
-i.e. the distribution approaches p(x) no matter the starting distribution p^0(x)
-
-If both these are true, then asymptotically (t -> inf), x ~ p iid
-
-Can slide around this typical set using gradients of the likelihood function, and then go perpendicular to it, i.e. the vector field made by the normals, so we turn it into a problem from a postion, into a problem related to the velocity -->
+Now, we have a method for utilizing samples from $q$ to learn something about our target distribution $p$.
 
 ## A Basic Example of Importance Sampling
 Let's suppose that we're working in a 1 dimensional space and we want to find the average over our very simple target distribution $p = Uniform[1, 6]$. We know from elementary statistics that:
 
 $$\mathbb{E}_{x \sim p} [x] = \frac{1 + 6}{2} = 3.5$$
 
-In addition, almost every mathematical package out there can sample from a Uniform distribution. But for the purposes of demonstration, let's assume that we can only sample from a 1-D normal distribution defined as $q = \mathcal{N}( \mu_q, \sigma_q^2 )$. We will utilize samples $x \sim q$ and importance sampling to approximate the value: $\mathbb{E}_{x \sim p} [x]$ (which we know should be $3.5$).
+In addition, almost every mathematical package out there can sample from a Uniform distribution. But for the purposes of demonstration, let's assume that we can only sample from a 1-D normal distribution defined as $q = \mathcal{N}( \mu_q, \sigma_q^2 )$. We will utilize samples $x \sim q$ and importance sampling to approximate the value $\mathbb{E}_{x \sim p} [x]$ (which we know should be $3.5$). In other words, we will be importance sampling with $f(x) = x$ for all $x$.
+
+
+Use the sliders below to adjust the parameters of our $q$ distribution, then generate samples from $q$ and watch the estimate for $\mathbb{E}_{x \sim p} [x]$ asymptotically converge.
 
 {% include animation-1.html %}
 
 
+## A More Complex Example
+
+Let's consider a more complex example brought up in chapter 29 of "Information Theory, Inference, and Learning Algorithms" by David Mackay:
+
+$$\widetilde{p\hspace{0.1em}}(x) = 0.5 e^{0.4(x-0.4)^2 - 0.08x^4}$$
+
+Since we don't know the normalizing constant $Z_p$ (and would have a very difficult time computing it analytically), we will use <a href="https://www.wolframalpha.com/input/?i=integral+from+-inf+to+inf+of+x+exp%280.4%28x-0.4%29%5E2+-+0.08x%5E4%29+dx+%2F+integral+from+-inf+to+inf+of+exp%280.4%28x-0.4%29%5E2+-+0.08x%5E4%29+dx" target="_blank">Wolfram Alpha</a> to get an estimated expected value:
+
+$$\frac{\int_{-\infty}^\infty x 0.5 e^{0.4(x-0.4)^2 - 0.08x^4} dx}{\int_{-\infty}^\infty 0.5 e^{0.4(x-0.4)^2 - 0.08x^4} dx } \approx -0.682815$$
+
+So we want to see an estimated value around $-0.682815$ from our importance sampling simulation:
+
+{% include animation-2.html %}
+
+From these simulations, we see that importance sampling well approximates the expected values over these relatively simple distributions. But for more complex and higher dimensional distributions, we run into issues with numerical stability. For example, we might luckily sample a point $x$ with $\widetilde{q\hspace{0.15em}}(x) \ll \widetilde{p\hspace{0.1em}}(x)$, resulting an extremely large $\widetilde{w}(x)$, which would then dominate the expected value estimate. In order to circumvent this, we look towards the method of Rejection Sampling.
+
+<!-- Especially in higher dimensions, the <a href="https://arxiv.org/pdf/1701.02434" target="_blank">typical set</a> (the region that contributes the most to our expected value computation) few points falling  -->
+
 ## Why We Shouldn't Reject Rejection Sampling
 
+Rejection Sampling is a slightly different method for solving problem 2, i.e. approximating $\int f(x) p(x) dx$. All the assumptions from importance sampling still persist but we also require knowledge of some constant $c$ such that for all $x$ over the support of $q$, we have:
 
-## Monte Carlo
-<!-- For most situations in the real world, it is difficult to calculate the transition function for an environment as we did in previous methods. Monte Carlo is a method of learning and approximating value functions that only requires experience, e.g. an agent running around an environment until it hits a goal. It is based on averaging sample discounted returns and is only defined for episodic tasks, where all episodes eventually terminate no matter what actions are chosen. This means that the estimates for each state is independent and doesn't depend on the estimates of other states.  -->
+$$c \widetilde{q\hspace{0.15em}}(x) > \widetilde{p\hspace{0.1em}}(x)$$
 
-<!-- 
+This essentially produces a probabilistic bounding box around $\widetilde{p\hspace{0.1em}}$. From here, we sample a point $x \sim q$ and then a point $u \sim Uniform[0, c\widetilde{q\hspace{0.15em}}(x)]$. Then, we compare $u$ with $\widetilde{p\hspace{0.1em}}(x)$, if $u > \widetilde{p\hspace{0.1em}}(x)$, then we reject that sample, otherwise we accept it. 
 
-## First-Visit and Every-Visit
+We can interpret this procedure as first uniformly selecting a point under the curve $c \widetilde{q\hspace{0.15em}}$. Then, keeping that point only if it falls under the curve $\widetilde{p\hspace{0.1em}}$. So our accepted samples are distributed proportionally to $\widetilde{p\hspace{0.1em}}$, i.e. they are distributed according to $p$. Then, we can use a simple Monte Carlo estimator to estimate:
 
-To estimate values for State Value functions, we average the returns observed after visits to each state. There are 2 different ways to do it:
-- The first-visit MC method averages returns of the first visit to each state in an episode.
-- The every-visit MC method averages returns of all visits to state.
+$$\mathbb{E}_{x \sim p} [f(x)] \approx \frac{1}{N} \sum_{i=1}^{M} f(x_i)$$
 
-Both converge to the optimal state value function with infinite experience.
+Where we have $M$ accepted points $\{x_i\}_{i=1}^M$. In our case, we just want the vanilla expected value, so we have:
 
-Blackjack is a good example for when it is hard to use DP (the probability of the next cards can be difficult to calculate), if you aren’t familiar with blackjack it uses these <a href="https://bicyclecards.com/how-to-play/blackjack/" target="_blank">rules</a>. A Blackjack environment has already been coded in <a href="https://gym.openai.com/" target="_blank">OpenAI's Gym</a>:
+$$\mathbb{E}_{x \sim p} [x] \approx \frac{1}{N} \sum_{i=1}^{M} x_i$$
 
-```python
-import numpy as np
-import gym
-env = gym.make('Blackjack-v0')
+Let's see how this compares to Importance Sampling for our previous 2 example $p$'s.
 
-# Only stick if our hand is 20 or 21
-policy = np.ones((32, 11, 2))
-policy[20:22, :, :] = 0
-policy[9:11, :, 1] = 0
+{% include animation-3.html %}
 
-V_s = np.zeros((32, 11, 2))
-ret = np.zeros((32, 11, 2))
-count = np.zeros((32, 11, 2))
+Note that the red lines indicate samples that were rejected. Now for the more complex distribution:
 
-DISCOUNT = 1
-```
+{% include animation-4.html %}
 
-We will evaluate the above policy with First Visit MC, iterating over several hundreds of thousands of trials in order to reduce the effects of randomness and hopefully reach every state.
 
-```python
-for _ in range(500000):
-  hand, show, ace = env.reset()
-  done = False
-  episode = []
-  
-  while not done:
-    state = (hand, show, int(ace))
-    (hand, show, ace), reward, done, _ = env.step(int(policy[state]))
-    episode.append((state, reward))
-  
-  g = 0
-  while len(episode) > 0:
-    state, reward = episode.pop()
-    g = DISCOUNT * g + reward
-    if (state, reward) not in episode:
-      count[state] += 1
-      V_s[state] += (g - V_s[state])/count[state]
-```
+## Rejection Sampling in Higher Dimensions
 
-Here are the approximated State Value functions (x-axis is what card the dealer is showing and y-axis is the sum of our hand), we can see that the with an Ace is not as smooth as the one without since we encounter states without Ace much more often:
+We can see that the rejection sampling approximates $\int f(x) p(x) dx$ about as well as importance sampling does, without the risk of numerical instability. However, the downside is that a proportion of our samples are rejected and have no use. This problem becomes an increasing issue in higher dimensions as the volume sandwiched between $c \widetilde{q\hspace{0.15em}}$ and $\widetilde{p\hspace{0.1em}}$ grows with increasing dimensions. Eventually, unless $c\widetilde{q\hspace{0.15em}}$ and $\widetilde{p\hspace{0.1em}}$ are the exact same distribution, the acceptance rate approaches 0%, i.e. most samples that we draw from $q$ will immediately be thrown away.
 
-{% include image-2.html 
-  url-1="/assets/images/3-mc/first_no_ace.png" 
-  des-1="No Usable Ace" 
-  url-2="/assets/images/3-mc/first_ace.png" 
-  des-2="Usable Ace" 
-%}
+Let's consider a situation where our $p = \mathcal{N}(0, 1)$ and our $q$ is a slightly more spread out normal distribution $ \mathcal{N}(0, 1.01)$:
 
-## Exploring Starts
+{% include animation-5.html %}
 
-If we do not have a model of the environment, we need approximations for state-action pairs, since creating a policy with state values requires the transition probabilities $p(s', r \mid  s,a)$. These actions values are also estimated by averaging sample discounted returns. The issue is that many state-action pairs might never be visited, and we need to estimate the value of all pairs to guarantee optimal convergence.
+Recall that the normal distribution $\mathcal{N}(\mu, \sigma)$ has the density function:
 
-This is especially difficult if we have a deterministic policy, where only one action will be taken in each state. In other words, we need to ensure exploration of all actions for each state. One way is to only consider policies that are stochastic with nonzero probability for all state-action pairs. Another method is 'exploring starts', where every state-action pair has a non zero probability of being selected as the starting state of an episode. 
+$$f(x) = \frac{1}{\sigma \sqrt{2\pi}} e^{-\frac{1}{2} \left( \frac{x - \mu}{\sigma} \right)^2}$$
 
-Here's the accompanying code:
-
-```python
-usable = np.zeros((32, 11, 2, 2))
-usable[1:22, 1:12] = 1
-
-q = np.random.random((32, 11, 2, 2)) * usable
-policy = np.argmax(q, axis=3)
-ret = np.zeros((32, 11, 2, 2))
-count = np.zeros((32, 11, 2, 2))
-
-DISCOUNT = 1
-
-for _ in range(10000000):
-  # Environment already has positive chance for all states
-  hand, show, ace = env.reset()
-  state = (hand, show, int(ace))
-  done = False
-  episode = []
-
-  action = np.random.randint(0, 2)
-  (hand, show, ace), reward, done, _ = env.step(action)
-  episode.append((state, action, reward))
-  while not done:
-    state = (hand, show, int(ace))
-    action = int(policy[state])
-    (hand, show, ace), reward, done, _ = env.step(action)
-    episode.append((state, action, reward))
-  
-  g = 0
-  while len(episode) > 0:
-    state, action, reward = episode.pop()
-    g = DISCOUNT * g + reward
-    
-    if (state, action, reward) not in episode:
-      count[state + tuple([action])] += 1
-      q[state + tuple([action])] += (g - q[state + tuple([action])])/count[state + tuple([action])]
-      policy[state] = np.argmax(q[state])
-```
-
-Which gives us:
-
-{% include image-4.html 
-  url-1="/assets/images/3-mc/es_no_ace_hit.png" 
-  des-1="Value of hitting with no usable ace." 
-  url-2="/assets/images/3-mc/es_ace_hit.png" 
-  des-2="Value of hitting with a usable ace." 
-  url-3="/assets/images/3-mc/es_no_ace_stick.png" 
-  des-3="Value of sticking with no usable ace." 
-  url-4="/assets/images/3-mc/es_ace_stick.png" 
-  des-4="Value of sticking with no usable ace." 
-%}
-
-## Policy Making
-
-In Monte Carlo methods, we still want to follow the idea behind Generalized Policy Iteration, where we maintain approximate value and policy functions, and optimize them episode by episode. After each episode, the observed returns are used to update the visited states, and then the policy is improved for all these states.
-
-There are 2 methods to go about approximating the optimal policy:
-- On-policy means to evaluate or improve the policy used to generate the data. 
-- Off-policy methods evaluate or improve a different policy than the data generating one. 
-
-In on-policy, the policies are generally 'soft', as in the policy always has a non zero probability of selecting every action in every state, similar to the epsilon-greedy policies. We still use first visit MC methods to estimate action values. 
-
-Here is the code for on-policy control (learning the policy) on the Blackjack environment:
-
-```python
-usable = np.zeros((32, 11, 2, 2))
-usable[1:22, 1:12] = 1
-q = np.random.random((32, 11, 2, 2)) * usable
-policy = np.argmax(q, axis=3)
-ret = np.zeros((32, 11, 2, 2))
-count = np.zeros((32, 11, 2, 2))
-
-epsilon = 0.1
-DISCOUNT = 1
-
-for _ in range(1000000):
-  hand, show, ace = env.reset()  
-  done = False
-  g = 0
-  episode = []
-
-  while not done:
-    state = (hand, show, int(ace))
-    action = int(policy[state])
-    (hand, show, ace), reward, done, _ = env.step(action)
-    episode.append((state, action, reward))
-  
-  while len(episode) > 0:
-    state, action, reward = episode.pop()
-    g = DISCOUNT * g + reward
-    
-    if (state, action, reward) not in episode:
-      count[state + tuple([action])] += 1
-      q[state + tuple([action])] += (g - q[state + tuple([action])])/count[state + tuple([action])]
-      g_action = np.argmax(q[state])
-
-      if np.random.random() < epsilon:
-        policy[state] = np.random.randint(0, 2)
-      else:
-        policy[state] = g_action
-```
-
-Here are the resulting value functions:
-
-{% include image-4.html 
-  url-1="/assets/images/3-mc/on_no_ace_hit.png" 
-  des-1="Value of hitting with no usable ace." 
-  url-2="/assets/images/3-mc/on_ace_hit.png" 
-  des-2="Value of hitting with usable ace." 
-  url-3="/assets/images/3-mc/on_no_ace_stick.png" 
-  des-3="Value of sticking with no usable ace." 
-  url-4="/assets/images/3-mc/on_ace_stick.png" 
-  des-4="Value of sticking with usable ace." 
-%}
-
-In off-policy, we consider 2 policies: a target policy $\pi$ that learns from the experience and becomes the optimal policy, and a behaviour policy $b$ which is more exploratory and generates the experience. Comparatively, on-policy is simpler and converges faster, but off-policy is more powerful and general (on-policy is a special case of off-policy when both target and behaviour policies are the same). 
-
-However, there is a problem when both $\pi$ and $b$ are fixed and we want to estimate $v_\pi$ or $q_\pi$. This is that the episodes follow $b$, while we try to estimate values for $\pi$, so we need to find a way to relate them to each other. To accomplish this, we require every action taken under $\pi$ also be taken in $b$, i.e. $\pi(a\mid s) > 0 \Rightarrow b(a\mid s) > 0$. This is also known as the assumption of coverage, it follows that $b$ must be stochastic where it is not identical to $\pi$, but $\pi$ can be a deterministic policy. 
-
-We approach this by utilizing Importance sampling, a technique for estimating expected values from one distribution given samples from another. This is applied to off-policy learning by weighting the sample returns according to the relative probability of their trajectories occurring under $\pi$ and $b$, called the importance-sampling ratio. The probability of the state-action trajectory $A_t, S_{t+1}, A_{t+1}, ..., S_T$ occurring under $\pi$ is:
-
-$$\pi(A_t\mid S_t)p(S_{t+1}\mid S_t, A_t)\pi(A_{t+1}\mid S_{t+1}) ... p(S_T\mid S_{T-1}, A_{T-1}) = \prod_{k=t}^{T-1} \pi(A_k\mid S_k)p(S_{k+1}\mid S_k, A_k)$$
-
-This still requires a model of the environment ($p(S_{t+1}\mid S_t, A_t)$), but if we consider the relative probability, we get:
-
-$$\rho_{t:T-1} = \frac{\prod_{k=t}^{T-1} \pi(A_k\mid S_k)p(S_{k+1}\mid S_k, A_k)}{\prod_{k=t}^{T-1} b(A_k\mid S_k)p(S_{k+1}\mid S_k, A_k)} = \frac{\prod_{k=t}^{T-1} \pi(A_k\mid S_k)}{\prod_{k=t}^{T-1} b(A_k\mid S_k)} $$
-
-So now we weight all our returns in $b$ with $\rho_{t:T-1}$ to transform it to returns for $\pi$. In doing so, let time continue to count up from episode to episode and we define:
-
-- $\mathcal{T}(s)$: set of either all time steps when $s$ was visited (every visit method), or the first time steps of each episode when $s$ was visited (first visit method).
-- $T(t)$: first episode termination after time $t$.
-- $G_t$: return after time $t$ up until $T(t)$.
-
-So we get:
-- $\\{G_t\\}_{t \in \mathcal{T}(s)}$, the returns that matter to state $s$.
-- $\\{\rho_{t:T-1}\\}_{t\in \mathcal{T}(s)}$, the corresponding importance-sampling ratios. 
-
-There are 2 ways of sampling each with their upsides and downsides:
-- Ordinary importance sampling:
-$$V(s)=\frac{\sum_{t\in\mathcal{T}(s)}\rho_{t:T-1}G_t}{|\mathcal{T}(s)|}$$
-
-- Weighted importance sampling:
-$$V(s)=\frac{\sum_{t\in\mathcal{T}(s)}\rho_{t:T-1}G_t}{\sum_{t\in\mathcal{T}(s)}\rho_{t:T-1}}$$
-
-On one hand, Weighted importance sampling has a variance between ratios of at most 1, whereas Ordinary importance sampling has unbounded variance. On the other hand, the ordinary one is unbiased where the weighted one is. But with the assumption of bounded returns (which we can assume in most cases), the variance of Weighted importance sampling converges to 0, so in general Weighted importance sampling is better.
-
-So our update for states with importance sampling weights $W_i$ and returns $G_i$ is:
-
-$$v_{n}(s) = \frac{\sum_{i=1}^n W_i G_i}{\sum_{i=1}^n W_i}$$
-
-Which can be constructed incrementally by keeping count $C_i$ and using:
+So we have:
 
 $$
 \begin{align*}
-v_{n}(s) &= v_{n-1}(s) + \frac{W_{n-1}}{C_{n-1}} [G_{n-1} - v_{n-1}(s)]\\
-C_n &= C_{n-1} + W_n
+p(0) &= \frac{1}{\sqrt{2\pi}}\\
+q(0) &= \frac{1}{1.01 \sqrt{2\pi}}\\
+\frac{p(0)}{q(0)} &= \frac{1}{\sqrt{2\pi}} \cdot 1.01 \sqrt{2\pi} = 1.01
 \end{align*}
 $$
 
-```python
-b = np.ones((32, 11, 2, 2)) * 0.5
-q = np.random.random((32, 11, 2, 2))
-count = np.zeros((32, 11, 2, 2))
-pi = np.argmax(q, axis=3)
-DISCOUNT = 1
+We need a $c > 1.01$ in 1-D to satisfy $c q > p$. However, in for an $n$-dimensional Normal Distribution, which we will denote $\mathcal{N}^n (\mu, \sigma)$, we recall that
 
-for _ in range(10000000):
-  hand, show, ace = env.reset()
-  done = False
-  episode = []
-  while not done:
-    state = (hand, show, int(ace))
-    action = np.random.choice(range(len(b[state])), p=b[state])
-    (hand, show, ace), reward, done, _ = env.step(action)
-    episode.append((state, action, reward))
-  g = 0.0
-  w = 1.0
-  while len(episode) > 0:
-    state, action, reward = episode.pop()
-    sa = state + tuple([action])
+$$\mathcal{N}^n (\mu, \sigma) = \mathcal{N}(\mu, \sigma) \times \mathcal{N}(\mu, \sigma) \times \cdots \times \mathcal{N}(\mu, \sigma)$$
 
-    g = DISCOUNT * g + reward
-    count[sa] += w
-    q[sa] += (w * (g - q[sa])) / count[sa]
-    pi[state] = np.argmax(q[state])
-    if pi[state] != action:
-      break
-       
-    w *= 1/b[sa]
-```
+Where we multiply a 1 dimensional normal distribution with another $n$ times. This means that for $p = \mathcal{N}^n (0, 1)$ and $q = \mathcal{N}^n (0, 1.01)$, we have:
 
-{% include image-4.html 
-  url-1="/assets/images/3-mc/off_no_ace_hit.png" 
-  des-1="Value of hitting with no usable ace." 
-  url-2="/assets/images/3-mc/off_ace_hit.png" 
-  des-2="Value of hitting with usable ace." 
-  url-3="/assets/images/3-mc/off_no_ace_stick.png" 
-  des-3="Value of sticking with no usable ace." 
-  url-4="/assets/images/3-mc/off_ace_stick.png" 
-  des-4="Value of sticking with usable ace." 
-%}
+$$
+\begin{align*}
+p(0) &= \left(\frac{1}{\sqrt{2\pi}}\right)^n\\
+q(0) &= \left(\frac{1}{1.01 \sqrt{2\pi}}\right)^n\\
+\frac{p(0)}{q(0)} &= 1.01^n
+\end{align*}
+$$
 
-For now that is all we need to know about Monte Carlo methods, but we will go much more in depth with Importance Sampling and its variants in the future.
+So we have $c \rightarrow \infty$ as $n \rightarrow \infty$. Let's see this empirically:
 
-[blackjack]: https://bicyclecards.com/how-to-play/blackjack/ -->
+{% include animation-6.html %}
+
+From this experiment, we see that the acceptance rate drops significantly with increasing dimension:
+
+{% include animation-7.html %}
+
+This values were generated by running the above simulation over $10,000$ samples with $\sigma_q = 1.01$ and seeing what percentage of samples were accepted. Sadly, there is no way for me to visually show the sampling from these higher dimensions on a 2 dimensional computer screen. However, I'll leave you with a piece of advice:
+
+{% include image.html url="/assets/images/hinton.jpg" %}

@@ -1,4 +1,4 @@
-<div>
+<div id="animation_1">
     <div class="range-slider">
         <input class="rs_range" autocomplete="off" type="range" value="0.0" min="-5.0" max="5.0" step="0.01">
         <div class="rs_display">
@@ -15,65 +15,19 @@
     </div>
 
     <div class="btn-group">
-        <button class="button" onclick="draw_samples_unif(1)">Generate 1</button>
-        <button class="button" onclick="draw_samples_unif(10)">Generate 10</button>
-        <button class="button" onclick="draw_samples_unif(100)">Generate 100</button>
-        <button class="button" onclick="draw_samples_unif(1000)">Generate 1000</button>
-        <button class="button" onclick="reset()">Reset</button>
+        <button class="button" onclick="draw_samples_1(1)">Generate 1</button>
+        <button class="button" onclick="draw_samples_1(10)">Generate 10</button>
+        <button class="button" onclick="draw_samples_1(100)">Generate 100</button>
+        <button class="button" onclick="draw_samples_1(1000)">Generate 1000</button>
+        <button class="button" onclick="reset_1()">Reset</button>
     </div>
-    <br/><br/>
 
-    <div style="display: flex; margin-top: 12px; margin-bottom: 0px;"><p>Current Estimate:&nbsp;</p> <p id="estimate">0.0</p></div>
+    <div class="display-div" style="margin-top: 12px;"><p class="display-txt">Current $\sum_{i=1}^{N} f(x_i) \widetilde{w}(x_i)$:&nbsp;</p> <p class="display-txt" id="denom_1">0.0</p></div>
+    <div class="display-div"><p class="display-txt">Current $\sum_{i=1}^N \widetilde{w}(x_i)$:&nbsp;</p> <p class="display-txt" id="numer_1">0.0</p></div>
+    <div class="display-div"><p class="display-txt">Current estimate of $\mathbb{E}_{x \sim p} [x]$:&nbsp;</p> <p class="display-txt" id="estimate_1">0.0</p></div>
 
-    <div id="draw_here" style="text-align:center;"></div>
-</div>    
-
-<style>
-    .range-slider {
-        display: flex; 
-        align-items: center;
-        margin-bottom: 8px;
-    }
-    .rs_range {
-        width:35%;
-        margin-right: 1em;
-    }
-    .rs_display {
-        display: flex;
-    }
-    .rs_p {
-        margin-top: 0px;
-        margin-bottom: 0px;
-    }
-
-    .btn-group {
-        margin-top: 20px;
-    }
-    .btn-group .button {
-        background-color: #ebebeb;
-        border: 1px solid #cbcbcb;
-        color: black;
-        padding: 10px 15px;
-        text-align: center;
-        text-decoration: none;
-        cursor: pointer;
-        float: left;
-    }
-    .btn-group .button:not(:last-child) {
-        border-right: none;
-    }
-    .btn-group .button:nth-last-child(2) {
-        border-right: 1px solid #cbcbcb;
-    }
-
-    .btn-group .button:last-child { 
-        margin-left: 10px;
-    }
-
-    .btn-group .button:hover {
-        background-color: #dbdbdb;
-    }
-</style>
+    <div id="draw_here_1" style="text-align:center;"></div>
+</div>
 
 <script type="text/javascript">
     // Setup Sliders
@@ -119,7 +73,7 @@
         .domain(d3.extent(data, d => d.x))
         .range([margin.left, canvas.width - margin.right])
     
-    y=d3.scaleLinear()
+    y = d3.scaleLinear()
         .domain(ylim)
         .range([canvas.height - margin.bottom, margin.top])
     
@@ -131,7 +85,7 @@
         .attr("transform", `translate(${margin.left},0)`)
         .call(d3.axisLeft(y).ticks(canvas.height / 40))
     
-    var svg = d3.select("div#draw_here").append("svg")
+    var svg = d3.select("div#draw_here_1").append("svg")
         .attr("viewBox", [0, 0, canvas.width, canvas.height]);
     
     // Draw q
@@ -140,7 +94,7 @@
         .y(d => y(d.y))
 
     svg.append("path")
-        .attr("id", "p1")
+        .attr("id", "q_1")
         .attr("fill", "none")
         .attr("stroke", l_blue)
         .attr("stroke-width", 1.5)
@@ -153,7 +107,7 @@
         .y(d => y(d[1]))
     
     svg.append("path")
-        .attr("id", "q1")
+        .attr("id", "p_1")
         .attr("fill", "none")
         .attr("stroke", l_red)
         .attr("stroke-width", 1.5)
@@ -168,30 +122,30 @@
     svg.append("g")
         .call(yAxis);
 
-    function transition() {
-        mu = $(".rs_range")[0].value
-        sigma = $(".rs_range")[1].value
+    function transition_1() {
+        mu = d3.select("#animation_1").selectAll(".rs_range").nodes()[0].value
+        sigma = d3.select("#animation_1").selectAll(".rs_range").nodes()[1].value
         scale = 1.0 / Math.sqrt(2 * Math.PI * sigma**2)
 
         fx_gauss = Float64Array.from(x_raw, d => scale * Math.exp(-(((d - mu)**2)/(2 * sigma**2))))
         data = d3.transpose([x_raw, fx_gauss]).map(d => ({x: d[0], y: d[1]}))
         
-        d3.select("path#p1")
+        d3.select("path#q_1")
             // .transition()
             // .duration(250)
             .attr("d", line(data))
     }
 
-    d3.selectAll(".rs_range")
-        .on("input", function() {transition()})
+    d3.select("#animation_1").selectAll(".rs_range")
+        .on("input", function() {transition_1()})
     
     // Generate Samples
     curr_sum = 0
     curr_count = 0
 
-    function draw_samples_unif(n) {
-        mu = $(".rs_range")[0].value
-        sigma = $(".rs_range")[1].value
+    function draw_samples_1(n) {
+        mu = d3.select("#animation_1").selectAll(".rs_range").nodes()[0].value
+        sigma = d3.select("#animation_1").selectAll(".rs_range").nodes()[1].value
 
         samples = d3.range(n).map(function() {return d3.randomNormal(mu, sigma)();})
 
@@ -204,8 +158,8 @@
             curr_sum += samples[i] * fx_unif[i] / fx_gauss[i]
             curr_count += fx_unif[i] / fx_gauss[i]
 
-            svg.insert("path", "#p1")
-                .attr("class", "sample")
+            svg.insert("path", "#q_1")
+                .attr("class", "sample_1")
                 .attr("fill", "none")
                 .attr("stroke", "#111")
                 .attr("stroke-width", 0.5)
@@ -215,16 +169,20 @@
                 ]));
         }
 
-        if (curr_sum > 0) {
-            d3.select("#estimate").text(curr_sum / curr_count)
+        if (curr_count > 0) {
+            d3.select("#denom_1").text(Number((curr_sum).toFixed(4)))
+            d3.select("#numer_1").text(Number((curr_count).toFixed(4)))
+            d3.select("#estimate_1").text(Number((curr_sum / curr_count).toFixed(4)))
         }
     }
 
-    function reset() {
-        d3.selectAll(".sample").remove()
+    function reset_1() {
+        d3.selectAll(".sample_1").remove()
         curr_sum = 0
         curr_count = 0
-        d3.select("#estimate").text(0.0)
+        d3.select("#estimate_1").text("0.0")
+        d3.select("#denom_1").text("0.0")
+        d3.select("#numer_1").text("0.0")
     }
 
 
@@ -304,7 +262,7 @@
     //         .call(d3.axisLeft(y).ticks(null, "%"))
     //         .call(g => g.select(".domain").remove())
         
-    //     var svg = d3.select("div#draw_here").append("svg")
+    //     var svg = d3.select("div#draw_here_1").append("svg")
     //         .attr("viewBox", [0, 0, width, height]);
         
     //     // svg.append("g")
@@ -319,7 +277,7 @@
     //     //     .attr("height", d => y(0) - y(d.length / data.length));
                 
     //     svg.append("path")
-    //         .attr("id", "p1")
+    //         .attr("id", "q_1")
     //         .attr("fill", "none")
     //         .attr("stroke", "#000")
     //         .attr("stroke-width", 1.5)

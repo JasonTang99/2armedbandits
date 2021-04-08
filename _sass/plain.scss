@@ -9,6 +9,67 @@ $smallMobileW: 480px;
 $bigScreenW: 1600px;
 $leftWidth: 220px;
 
+// Animation Stuff
+.range-slider {
+	display: flex; 
+	align-items: center;
+	margin-bottom: 8px;
+}
+.rs_range {
+	width:35%;
+	margin-right: 1em;
+}
+.rs_display {
+	display: flex;
+}
+.rs_p {
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+
+.display-div {
+	display: flex; 
+	margin-top: 0px; 
+	margin-bottom: 0px;
+}
+.display-txt {
+	margin: 8px 0px;
+}
+
+.btn-group {
+	margin-top: 20px;
+	overflow: auto;
+}
+.btn-group .button {
+	background-color: #ebebeb;
+	border: 1px solid #cbcbcb;
+	color: black;
+	padding: 10px 15px;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	float: left;
+}
+.btn-group .button:not(:last-child) {
+	border-right: none;
+}
+.btn-group .button:nth-last-child(2) {
+	border-right: 1px solid #cbcbcb;
+}
+
+.btn-group .button:last-child { 
+	margin-left: 10px;
+}
+
+.btn-group .button:hover {
+	background-color: #dbdbdb;
+}
+
+// End of Animation Stuff
+
+
+
+
 *,*:before,*:after {
 	box-sizing: border-box;
 }

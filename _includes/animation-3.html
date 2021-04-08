@@ -1,0 +1,226 @@
+<div id="animation_3">
+    <div class="range-slider">
+        <input class="rs_range" autocomplete="off" type="range" value="0.0" min="-5.0" max="5.0" step="0.01">
+        <div class="rs_display">
+            <p class="rs_p">$\mu_q$:&nbsp;</p>
+            <p class="rs_value rs_p">0</p>
+        </div>
+    </div>
+    <div class="range-slider">
+        <input class="rs_range" autocomplete="off" type="range" value="1.0" min="1.0" max="5" step="0.01">
+        <div class="rs_display">
+            <p class="rs_p">$\sigma_q$:&nbsp;</p>
+            <p class="rs_value rs_p">0</p>
+        </div>
+    </div>
+    <div class="range-slider">
+        <input class="rs_range" autocomplete="off" type="range" value="1.0" min="1.0" max="10.0" step="0.01">
+        <div class="rs_display">
+            <p class="rs_p">$c$:&nbsp;</p>
+            <p class="rs_value rs_p">0</p>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="button" onclick="draw_samples_3(1)">Generate 1</button>
+        <button class="button" onclick="draw_samples_3(10)">Generate 10</button>
+        <button class="button" onclick="draw_samples_3(100)">Generate 100</button>
+        <button class="button" onclick="draw_samples_3(1000)">Generate 1000</button>
+        <button class="button" onclick="reset_3()">Reset</button>
+    </div>
+
+    <div class="display-div" style="margin-top: 12px;"><p class="display-txt">Current $\sum_{i=1}^{M} x_i$:&nbsp;</p> <p class="display-txt" id="denom_3">0.0</p></div>
+    <div class="display-div"><p class="display-txt">Current $M$:&nbsp;</p> <p class="display-txt" id="numer_3">0.0</p></div>
+    <div class="display-div"><p class="display-txt">Current estimate of $\mathbb{E}_{x \sim p} [x]$:&nbsp;</p> <p class="display-txt" id="estimate_3">0.0</p></div>
+    <div class="display-div"><p class="display-txt">Current acceptance rate:&nbsp;</p> <p class="display-txt" id="reject_3">0.0</p></div>
+
+    <p id="error_3" style="display: none; color: red;">Error: there are regions where $c\widetilde{q\hspace{0.15em}}(x) \leq \widetilde{p\hspace{0.1em}}(x)$. Try increasing $c$.</p>
+
+    <div id="draw_here_3" style="text-align:center;"></div>
+</div>
+
+<script type="text/javascript">
+    // Setup Sliders
+    var rangeSlider = function(){
+        var slider = $('.range-slider')
+        slider.each(function(){
+            var val = $(this).children().last().children().last()
+            var range = $(this).children().first()
+
+            val.html(range.attr('value'))            
+            range.on('input', function(){
+                $(this).next().children().last().html(this.value);
+            });
+        });
+    };
+    rangeSlider();
+
+    // Compute Gaussian
+    canvas = ({width:1000, height:500})
+    margin = ({top: 20, right: 30, bottom: 30, left: 40})
+
+    l_blue = "#5073e8"
+    l_red = "#db4c43"
+    
+    xlim_3 = [-10, 10]
+    ylim_3 = [0.0, 0.5]
+
+    mu_3 = 0.0
+    sigma_3 = 1.0
+    scale_3 = 1.0 / Math.sqrt(2 * Math.PI * sigma_3**2)
+    c_3 = 1.0
+
+    x_raw_3 = d3.range(xlim_3[0], xlim_3[1], (xlim_3[1] - xlim_3[0]) / 1000)
+    fx_gauss_3 = Float64Array.from(x_raw_3, d => c_3 * scale_3 * Math.exp(-(((d - mu_3)**2)/(2 * sigma_3**2))))
+    
+    fx_fancy = Float64Array.from(x_raw_3, d => (d >= 1 & d <= 6) ? 0.2 : 0.0)
+
+    data_3 = d3.transpose([x_raw_3, fx_gauss_3]).map(d => ({x: d[0], y: d[1]}))
+    data_fancy = d3.transpose([x_raw_3, fx_fancy]).map(d => ({x: d[0], y: d[1]}))
+    
+    // Setup Chart
+    x_3 = d3.scaleLinear()
+        .domain(d3.extent(data_3, d => d.x))
+        .range([margin.left, canvas.width - margin.right])
+    
+    y_3 = d3.scaleLinear()
+        .domain(ylim_3)
+        .range([canvas.height - margin.bottom, margin.top])
+    
+    xAxis_3 = g => g
+        .attr("transform", `translate(0,${canvas.height-margin.bottom})`)
+        .call(d3.axisBottom(x_3).ticks(canvas.width / 80).tickSizeOuter(0))
+    
+    yAxis_3 = g => g
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y_3).ticks(canvas.height / 40))
+    
+    var svg_3 = d3.select("div#draw_here_3").append("svg")
+        .attr("viewBox", [0, 0, canvas.width, canvas.height]);
+    
+    // Draw q
+    line_class_3 = d3.line()
+        .x(d => x_3(d.x))
+        .y(d => y_3(d.y))
+
+    svg_3.append("path")
+        .attr("id", "q_3")
+        .attr("fill", "none")
+        .attr("stroke", l_blue)
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("d", line_class_3(data_3));
+    
+    // Draw p
+    line_array_3 = d3.line()
+        .x(d => x_3(d[0]))
+        .y(d => y_3(d[1]))
+
+    svg_3.append("path")
+        .attr("id", "p_3")
+        .attr("fill", "none")
+        .attr("stroke", l_red)
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("d", line_class_3(data_fancy));
+    
+    svg_3.append("g")
+        .call(xAxis_3);
+
+    svg_3.append("g")
+        .call(yAxis_3);
+
+    function transition_3() {
+        mu_3 = d3.select("#animation_3").selectAll(".rs_range").nodes()[0].value
+        sigma_3 = d3.select("#animation_3").selectAll(".rs_range").nodes()[1].value
+        c_3 = d3.select("#animation_3").selectAll(".rs_range").nodes()[2].value
+        scale_3 = 1.0 / Math.sqrt(2 * Math.PI * sigma_3**2)
+
+        fx_gauss_3 = Float64Array.from(x_raw_3, d => c_3 * scale_3 * Math.exp(-(((d - mu_3)**2)/(2 * sigma_3**2))))
+        data_3 = d3.transpose([x_raw_3, fx_gauss_3]).map(d => ({x: d[0], y: d[1]}))
+        
+        d3.select("path#q_3")
+            // .transition()
+            // .duration(250)
+            .attr("d", line_class_3(data_3))
+    }
+
+    d3.select("#animation_3").selectAll(".rs_range")
+        .on("input", function() {transition_3()})
+    
+    // Generate Samples
+    curr_sum_3 = 0
+    curr_count_3 = 0
+    curr_total_3 = 0
+
+    function mult_vector(a, b){
+        return a.map((e, i) => e * b[i]);
+    }
+
+    function draw_samples_3(n) {
+        mu_3 = d3.select("#animation_3").selectAll(".rs_range").nodes()[0].value
+        sigma_3 = d3.select("#animation_3").selectAll(".rs_range").nodes()[1].value
+        c_3 = d3.select("#animation_3").selectAll(".rs_range").nodes()[2].value
+
+        if (c_3 * scale_3 * Math.exp(-(((1 - mu_3)**2)/(2 * sigma_3**2))) <= 0.2 | 
+            c_3 * scale_3 * Math.exp(-(((6 - mu_3)**2)/(2 * sigma_3**2))) <= 0.2) {
+                d3.select("#error_3").style("display", "block")
+                return
+        }
+        d3.select("#error_3").style("display", "none")
+
+        samples = d3.range(n).map(function() {return d3.randomNormal(mu_3, sigma_3)();})
+        samples_2 = d3.range(n).map(function() {return d3.randomUniform()();})
+
+        scale_3 = 1.0 / Math.sqrt(2 * Math.PI * sigma_3**2)
+        fx_samples = Float64Array.from(samples, d => c_3 * scale_3 * Math.exp(-(((d - mu_3)**2)/(2 * sigma_3**2))))
+
+        fx_scaled = mult_vector(fx_samples, samples_2)
+
+        fx_target = Float64Array.from(samples, d => (d >= 1 & d <= 6) ? 0.2 : 0.0)
+        
+        for (i = 0; i < fx_samples.length; i++) {   
+            if (fx_scaled[i] <= fx_target[i]) {
+                curr_sum_3 += samples[i]
+                curr_count_3 += 1
+                svg_3.insert("path", "#q_3")
+                    .attr("class", "sample_3")
+                    .attr("fill", "none")
+                    .attr("stroke", "#111")
+                    .attr("stroke-width", 0.5)
+                    .attr("stroke-linejoin", "round")
+                    .attr("d", line_array_3([
+                        [samples[i], ylim_3[0]], [samples[i], ylim_3[1]]
+                    ]));
+            } else {
+                svg_3.insert("path", "#q_3")
+                    .attr("class", "sample_3")
+                    .attr("fill", "none")
+                    .attr("stroke", "#e00")
+                    .attr("stroke-width", 0.5)
+                    .attr("stroke-linejoin", "round")
+                    .attr("d", line_array_3([
+                        [samples[i], ylim_3[0]], [samples[i], ylim_3[1]]
+                    ]));
+            }
+        }
+        curr_total_3 += n
+
+        if (curr_count_3 > 0) {
+            d3.select("#denom_3").text(Number((curr_sum_3).toFixed(4)))
+            d3.select("#numer_3").text(Number((curr_count_3).toFixed(4)))
+            d3.select("#estimate_3").text(Number((curr_sum_3 / curr_count_3).toFixed(4)))
+            d3.select("#reject_3").text(Number((curr_count_3 / curr_total_3).toFixed(4)))
+        }
+    }
+
+    function reset_3() {
+        d3.selectAll(".sample_3").remove()
+        curr_sum_3 = 0
+        curr_count_3 = 0
+        d3.select("#estimate_3").text("0.0")
+        d3.select("#denom_3").text("0.0")
+        d3.select("#numer_3").text("0.0")
+        d3.select("#reject_3").text("1.0")
+    }
+</script>

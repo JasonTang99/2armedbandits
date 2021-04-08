@@ -13,5 +13,5 @@ I used the [Jekyll][jekyll] and a modified version of the [plainwhite-jekyll][pl
 The source code is available on [my Github][site_gh]. 
 
 [jekyll]: https://jekyllrb.com/
-[site_gh]: https://github.com/JasonTang99/JasonTang99.github.io
+[site_gh]: https://github.com/2armedbandits/2armedbandits.github.io
 [plain_gh]: https://github.com/thelehhman/plainwhite-jekyll
