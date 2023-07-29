@@ -17,7 +17,7 @@ title: 2 Armed Bandits
 author: JasonTang99
 email: 1999jasontang@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Just another student's attempt at a technical blog. 
+  Personal Blog.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 github_username: JasonTang99
@@ -52,7 +52,6 @@ plainwhite:
 
   # generate social links in footer
   social_links:
-    # twitter: thelehhman
     github:  JasonTang99
     linkedIn: in/1999jasontang
     email: 1999jasontang@gmail.com
